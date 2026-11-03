@@ -1,6 +1,6 @@
 ---
-name: AfinaVoz
-description: Afinador y entrenador vocal de bolsillo, al nivel de acabado de una app de música de primera línea.
+name: MUSIC MAN
+description: Profesor de canto, afinador de guitarra y analizador de espectro de bolsillo, al nivel de acabado de una app de música de primera línea.
 colors:
   bg: "#0e0e10"
   surface: "#18181b"
@@ -100,7 +100,7 @@ components:
     padding: "14px"
 ---
 
-# Design System: AfinaVoz
+# Design System: MUSIC MAN
 
 ## Overview
 
@@ -134,7 +134,7 @@ Figtree (variable 400–900, alojada en `fonts/`, licencia OFL) para todo. Títu
 
 ## Layout
 
-Una columna de 640px máximo, márgenes laterales de 16px. Barra superior fija (título a la izquierda, micro a la derecha) y barra inferior de cuatro pestañas, ambas alineadas con la columna en pantallas anchas. Los lienzos (rollo de piano, curva) van a sangre (`.bleed`). Secciones separadas 28px por encima y 12px por debajo del título.
+Una columna de 640px máximo, márgenes laterales de 16px. Barra superior fija (título a la izquierda, micro a la derecha) y barra inferior de cuatro pestañas (Canto, Guitarra, Espectro, Progreso), ambas alineadas con la columna en pantallas anchas. Canto tiene un control segmentado propio (Afinar voz · Canciones · Entrenar) bajo la barra superior. Los lienzos (rollo de piano, curva) van a sangre (`.bleed`). Secciones separadas 28px por encima y 12px por debajo del título.
 
 ## Elevation & Depth
 
@@ -160,6 +160,15 @@ Selectores «píldora» con etiqueta pequeña encima del valor y un chevron. Los
 
 ### Navigation
 Barra inferior con iconos SVG lineales propios (trazo 1.8, y 2.4 en la pestaña activa) y etiqueta. La flecha atrás aparece solo en las subpantallas.
+
+### Control segmentado
+Pista de superficie con tres segmentos; el activo sube a superficie 3 con texto blanco.
+
+### Cuerdas de guitarra
+Seis botones en rejilla (número de cuerda, nota grande, octava). La cuerda detectada sube a superficie 3; la fijada se invierte a blanco; la afinada lleva un punto menta.
+
+### Espectro y espectrograma
+Eje logarítmico con rejilla en superficie de lienzo; curva azul con relleno degradado hacia transparente, retención de picos en gris al 50 %, fundamental en menta sólida y armónicos en menta discontinua. El espectrograma usa la rampa fondo → azul → menta → ámbar → blanco.
 
 ### Rollo de piano (componente propio)
 Filas por semitono (las notas de la escala, teñidas de verde), bloques de nota coloreados según su error en cents, la nota correcta en línea discontinua, la curva de tono en azul y el cursor de reproducción en blanco.

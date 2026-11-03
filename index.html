@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0e0e10" />
   <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Afinador de voz de bolsillo: registro de afinación por canciones, entrenamiento vocal y análisis de tono y emoción." />
-  <title>AfinaVoz</title>
+  <meta name="description" content="MUSIC MAN: profesor de canto de bolsillo, afinador de guitarra y analizador de espectro." />
+  <meta name="apple-mobile-web-app-title" content="MUSIC MAN" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <title>MUSIC MAN</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon.svg" />
@@ -26,12 +29,15 @@
       <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></symbol>
       <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/></symbol>
       <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+      <symbol id="i-voice" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v4.5M8.5 21.5h7"/></symbol>
+      <symbol id="i-guitar" viewBox="0 0 24 24"><path d="m14 10 6.5-6.5M19 2l3 3"/><path d="M11.5 8.5c-1.4-1.4-4-1.2-5.6.4-1 1-1.2 2.3-.8 3.4-1.6.2-2.8 1.3-2.9 3-.1 2.5 2.1 5 4.5 5.4 1.8.3 3.3-.9 3.6-2.6 1.1.4 2.4.1 3.4-.9 1.6-1.6 1.8-4.2.4-5.6"/><circle cx="9.5" cy="14.5" r="1.3"/></symbol>
+      <symbol id="i-spectrum" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 20v-5M8.5 20V9M12 20v-8M15.5 20V5M19 20v-6"/></symbol>
     </defs>
   </svg>
 
   <header class="topbar">
     <button class="icon-btn back-btn" id="backBtn" aria-label="Volver" hidden><svg><use href="#i-back"/></svg></button>
-    <h1 id="viewTitle">Afinador</h1>
+    <h1 id="viewTitle">Canto</h1>
     <button id="micBtn" class="mic-pill" aria-pressed="false">
       <svg><use href="#i-mic"/></svg><span id="micLabel">Activar micro</span>
     </button>
@@ -39,8 +45,14 @@
 
   <main>
     <!-- AFINADOR -->
-    <section id="view-tuner" class="view active" aria-label="Afinador">
-      <div class="tuner" id="tuner" data-state="idle">
+    <nav class="subnav" id="subnav" role="tablist" aria-label="Profesor de canto">
+      <button role="tab" data-go="tuner" aria-selected="true">Afinar voz</button>
+      <button role="tab" data-go="songs" aria-selected="false">Canciones</button>
+      <button role="tab" data-go="train" aria-selected="false">Entrenar</button>
+    </nav>
+
+    <section id="view-tuner" class="view active" aria-label="Afinar voz">
+      <div class="tuner" id="tTuner" data-state="idle">
         <div id="tNote" class="tuner-note">–</div>
         <div class="tuner-meta"><span id="tCents">0</span> cents<span class="dot">·</span><span id="tHz">0</span> Hz</div>
         <div class="meter" aria-hidden="true">
@@ -55,6 +67,48 @@
         <label class="pill-select"><span>Tonalidad</span><select id="tKey"></select></label>
         <label class="pill-select"><span>Escala</span><select id="tScale"></select></label>
       </div>
+    </section>
+
+    <!-- GUITARRA -->
+    <section id="view-guitar" class="view" aria-label="Afinador de guitarra">
+      <div class="tuner" id="gTuner" data-state="idle">
+        <div id="gNote" class="tuner-note">–</div>
+        <div class="tuner-meta"><span id="gCents">0</span> cents<span class="dot">·</span><span id="gHz">0</span> Hz</div>
+        <div class="meter meter-fine" aria-hidden="true">
+          <div class="meter-zone"></div>
+          <div id="gNeedle" class="needle"></div>
+        </div>
+        <div class="meter-scale" aria-hidden="true"><span>−50</span><span>0</span><span>+50</span></div>
+        <div id="gHint" class="tuner-hint">Activa el micro y toca una cuerda</div>
+      </div>
+      <div class="strings" id="gStrings" role="group" aria-label="Cuerdas"></div>
+      <p id="gMode" class="strings-mode">Automático: toca cualquier cuerda</p>
+      <div class="pill-selects">
+        <label class="pill-select"><span>Afinación</span><select id="gTuning"></select></label>
+      </div>
+      <p class="fineprint">Toca una cuerda para oír su nota y fijarla; vuelve a tocarla para volver al modo automático. Una cuerda se marca como afinada tras medio segundo dentro de ±4 cents.</p>
+    </section>
+
+    <!-- ESPECTRO -->
+    <section id="view-spectrum" class="view" aria-label="Analizador de espectro">
+      <div class="spec-readouts">
+        <div class="readout"><span>Tono</span><b id="spFund">—</b></div>
+        <div class="readout"><span>Pico</span><b id="spPeak">—</b></div>
+        <div class="readout"><span>Nivel</span><b id="spLevel">—</b></div>
+      </div>
+      <canvas id="spCanvas" class="roll bleed" height="240"></canvas>
+      <h3 class="section-title">Espectrograma</h3>
+      <canvas id="spGram" class="roll bleed spec-gram" height="150"></canvas>
+      <div class="spec-controls">
+        <label class="pill-select"><span>Rango</span>
+          <select id="spRange"><option value="voice">Voz e instrumentos · 60 Hz–5 kHz</option><option value="bass">Graves · 20–600 Hz</option><option value="full">Completo · 20 Hz–20 kHz</option></select>
+        </label>
+        <div class="btn-row">
+          <button id="spFreeze" class="btn btn-dark" aria-pressed="false">Congelar</button>
+          <button id="spHoldBtn" class="btn btn-dark toggle" aria-pressed="true">Retener picos</button>
+        </div>
+      </div>
+      <p class="fineprint">La línea verde marca el tono detectado y las discontinuas sus armónicos. El nivel es relativo (dB respecto al máximo digital), no dB SPL calibrados.</p>
     </section>
 
     <!-- CANCIONES -->
@@ -141,9 +195,9 @@
   </main>
 
   <nav class="tabbar" aria-label="Secciones">
-    <button data-go="tuner" class="active"><svg><use href="#i-tuner"/></svg>Afinador</button>
-    <button data-go="songs"><svg><use href="#i-songs"/></svg>Canciones</button>
-    <button data-go="train"><svg><use href="#i-train"/></svg>Entrenar</button>
+    <button data-go="voice" class="active"><svg><use href="#i-voice"/></svg>Canto</button>
+    <button data-go="guitar"><svg><use href="#i-guitar"/></svg>Guitarra</button>
+    <button data-go="spectrum"><svg><use href="#i-spectrum"/></svg>Espectro</button>
     <button data-go="progress"><svg><use href="#i-progress"/></svg>Progreso</button>
   </nav>
 

@@ -1,5 +1,5 @@
 // Almacenamiento local con IndexedDB (canciones, tomas con audio, entrenamientos).
-const DB_NAME = 'afinavoz';
+const DB_NAME = 'afinavoz'; // nombre interno heredado: no cambiarlo o se perderían los datos guardados
 const VERSION = 1;
 let dbp = null;
 

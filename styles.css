@@ -111,6 +111,7 @@ main { max-width: 640px; margin: 0 auto; padding: 4px var(--gutter) 0; }
 /* ---------- Afinador ---------- */
 .tuner { --state: var(--dim); position: relative; text-align: center; padding: 28px 0 8px; isolation: isolate; }
 .tuner::before {
+  pointer-events: none;
   content: ""; position: absolute; inset: -40px calc(-1 * var(--gutter)) -20px; z-index: -1;
   background: radial-gradient(60% 55% at 50% 38%, color-mix(in srgb, var(--state) 22%, transparent), transparent 75%);
   transition: background .5s var(--ease);
@@ -344,3 +345,49 @@ dialog h3 { font-size: 22px; font-weight: 900; }
   box-shadow: 0 10px 30px rgba(0,0,0,.5); transition: opacity .3s var(--ease), transform .3s var(--ease);
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- MUSIC MAN: subpestañas de Canto ---------- */
+.subnav {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; margin: 4px 0 4px;
+  background: var(--surface); border-radius: 12px;
+}
+.subnav button {
+  border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: 14px; height: 36px; border-radius: 9px; cursor: pointer;
+  transition: background .25s var(--ease), color .25s var(--ease);
+}
+.subnav button[aria-selected="true"] { background: var(--surface-3); color: var(--text); }
+
+/* La aguja ya llega suavizada: sin transición CSS que añada retraso */
+.needle { transition: background .3s var(--ease); will-change: left; }
+.meter-fine .meter-zone { left: 46%; width: 8%; }
+
+/* ---------- Guitarra ---------- */
+.strings { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 22px; }
+.string {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 10px 0 9px; border: 0; border-radius: 12px; background: var(--surface); cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease), transform .15s var(--ease);
+}
+.string:active { transform: scale(.95); }
+.string-num { font-size: 11px; font-weight: 700; color: var(--dim); }
+.string-note { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; }
+.string-oct { font-size: 11px; font-weight: 600; color: var(--muted); }
+.string.active { background: var(--surface-3); }
+.string[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.string[aria-pressed="true"] .string-num, .string[aria-pressed="true"] .string-oct { color: #52525b; }
+.string.tuned::after {
+  content: ""; position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+}
+.strings-mode { text-align: center; color: var(--muted); font-weight: 600; font-size: 13.5px; margin: 12px 0 0; min-height: 20px; }
+
+/* ---------- Espectro ---------- */
+.spec-readouts { display: grid; grid-template-columns: 1.3fr 1fr .8fr; gap: 8px; margin-top: 8px; }
+.readout { background: var(--surface); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+.readout span { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+.readout b { display: block; font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.readout:first-child b { color: var(--accent); }
+.spec-gram { margin-top: 0; image-rendering: pixelated; }
+.spec-controls { margin-top: 16px; }
+.spec-controls .pill-select { width: 100%; }
+.btn.toggle[aria-pressed="true"], #spFreeze[aria-pressed="true"] { background: var(--text); color: var(--bg); }

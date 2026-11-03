@@ -1,39 +1,54 @@
-# AfinaVoz 🎤
+# MUSIC MAN 🎤🎸
 
-Afinador y entrenador vocal "de bolsillo": un Melodyne simplificado que funciona en el móvil desde el navegador (y se puede instalar como app).
+Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra** y **analizador de espectro** en una app web que funciona en el móvil (y se instala como app).
 
 ## Qué hace
 
-- **Afinador en vivo**: activa el micro, muestra la nota, los cents de desviación y la curva de tono en tiempo real. Puedes fijar tonalidad y escala para que te compare con las notas correctas de la canción.
-- **Canciones**: crea canciones (título, artista, tonalidad, escala y emoción que quieres transmitir) y graba tomas. Cada toma guarda la curva de tono y el audio, y genera un informe:
-  - Vista tipo Melodyne: bloques de nota coloreados por desafinación + curva de tono, sincronizada con la reproducción.
-  - Afinación: desviación media, tendencia (alto/bajo), % de tiempo afinado, rango usado, notas más difíciles, entradas por debajo (scoop).
-  - Estabilidad y vibrato (velocidad y amplitud).
-  - **Tono de voz**: brillo (oscuro ↔ metálico), aire en la voz, rango dinámico.
-  - **Emoción**: estimación en el mapa energía × valencia (alegre, tenso, sereno, triste, apasionado, íntimo…) y % de coincidencia con la emoción que buscabas, con consejos para acercarte.
-  - Puntuación global (55% afinación, 25% estabilidad, 20% expresividad) y consejos.
-- **Entrenar**: nota sostenida, nota al azar, escala mayor/menor y arpegio, con referencia sonora. Cuenta como acierto cantar la nota en cualquier octava.
-- **Progreso**: racha de días, minutos cantados, evolución de la puntuación y de los cents, mejora por canción y rango vocal registrado.
+### Canto (profesor de canto)
+- **Afinar voz**: nota, cents y curva de tono en tiempo real, con tonalidad y escala de referencia.
+- **Canciones**: crea canciones y graba tomas. Cada toma genera un informe: vista tipo Melodyne (bloques de nota coloreados por desafinación + curva, sincronizada con el audio), afinación, tendencia alta/baja, estabilidad, vibrato, rango, notas difíciles, **tono de voz** (brillo, aire, dinámica) y **emoción** estimada, con consejos.
+- **Entrenar**: nota sostenida, nota al azar, escalas mayor/menor y arpegio con referencia sonora (vale cualquier octava).
 
-Todo se guarda solo en el dispositivo (IndexedDB). Se puede exportar/importar una copia en JSON (sin audios).
+### Guitarra
+- Afinador cromático con detección automática de la cuerda, o fijando una cuerda (suena su nota de referencia).
+- Afinaciones: estándar, Drop D, medio tono y un tono abajo, Drop C, DADGAD, Open G, Open D y Open E.
+- Marca cada cuerda como afinada tras medio segundo dentro de ±4 cents.
+
+### Espectro
+- Espectro en tiempo real (FFT de 8192 puntos, eje de frecuencia logarítmico) con retención de picos, tono fundamental y armónicos marcados.
+- Espectrograma en cascada, tres rangos (voz, graves, completo) y botón para congelar.
+
+### Progreso
+- Racha de días, minutos, evolución de la puntuación y de los cents, mejora por canción y rango vocal. Ajustes y copia de seguridad.
+
+Todo se guarda solo en el dispositivo (IndexedDB).
+
+## Captación fluida
+
+El tono se mide ~83 veces por segundo y pasa por un seguimiento (`js/tracker.js`) que:
+- suaviza con un filtro *One Euro* (quieto cuando la nota está quieta, ágil cuando se mueve);
+- se asienta en menos de 100 ms al cambiar de nota;
+- corrige saltos de octava falsos y lecturas aisladas;
+- mantiene la nota en microcortes, con un umbral de ruido con histéresis para no cortar finales de frase.
 
 ## Cómo usarla
 
-Necesita servirse por HTTPS o `localhost` (los navegadores solo permiten el micrófono así):
+Necesita HTTPS o `localhost` para el micrófono:
 
 ```bash
-npm start          # sirve en http://localhost:8080
-npm test           # pruebas del detector de tono y del análisis
+npm start   # http://localhost:8080
+npm test    # pruebas del detector, el seguimiento y el análisis
 ```
 
-Para el móvil, publícala en cualquier hosting estático (p. ej. GitHub Pages) y ábrela desde Safari/Chrome → "Añadir a pantalla de inicio".
+Publicada con GitHub Pages: https://taboadamusica-hue.github.io/App-para-afinar-/
 
-## Cómo funciona
+## Código
 
-- `js/pitch.js` — detección de tono con el algoritmo **YIN** (error < 3 cents en las pruebas), notas y escalas.
-- `js/analysis.js` — segmentación en notas, afinación, vibrato, timbre (centroide espectral y claridad armónica) y modelo de emoción.
-- `js/audio.js` — micrófono (sin cancelación de eco ni control de ganancia, para no falsear la voz), grabación y tonos de referencia.
-- `js/draw.js` — rollo de piano y gráficas en canvas.
+- `js/pitch.js` — detector de tono YIN, notas, escalas y afinaciones de guitarra.
+- `js/tracker.js` — seguimiento fluido del tono.
+- `js/analysis.js` — análisis de tomas: afinación, vibrato, timbre y emoción.
+- `js/audio.js` — micrófono, grabación, tonos de referencia y analizador de espectro.
+- `js/draw.js` — rollo de piano, gráficas, espectro y espectrograma.
 - `js/app.js` — interfaz.
 
-> La "emoción" es una estimación heurística a partir de volumen, timbre, ritmo, contorno melódico y la escala de la canción. Sirve como orientación, no como juicio absoluto; el volumen depende también de la distancia al micro.
+> La emoción es una estimación heurística (volumen, timbre, ritmo, contorno melódico y escala): orientación, no juicio absoluto.

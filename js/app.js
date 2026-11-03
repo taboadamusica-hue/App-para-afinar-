@@ -1,12 +1,12 @@
-// AfinaVoz — interfaz principal.
-import { freqToMidi, noteName, nearestScaleMidi, NOTE_NAMES, SCALES } from './pitch.js';
+// MUSIC MAN — interfaz principal.
+import { freqToMidi, midiToFreq, noteName, nearestScaleMidi, nearestString, NOTE_NAMES, SCALES, GUITAR_TUNINGS } from './pitch.js';
 import { analyzeTake, scoreSustain, scoreSequence, EMOTION_LIST } from './analysis.js';
 import { MicEngine } from './audio.js';
 import * as db from './db.js';
-import { drawRoll, drawChart, circumplexSvg, errColor } from './draw.js';
+import { drawRoll, drawChart, circumplexSvg, errColor, drawSpectrum, drawSpectrogramColumn, clearSpectrogram, spectrumPeak } from './draw.js';
 
 // ---------- Ajustes ----------
-const DEFAULTS = { notation: 'latin', a4: 440, sensitivity: 5, saveAudio: true, tunerKey: 0, tunerScale: 'chromatic', exRoot: 57 };
+const DEFAULTS = { notation: 'latin', a4: 440, sensitivity: 5, saveAudio: true, tunerKey: 0, tunerScale: 'chromatic', exRoot: 57, guitarTuning: 'standard', spRange: 'voice', spHold: true };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('afinavoz.settings') || '{}') }; } catch { /* sin storage */ }
 const saveSettings = () => { try { localStorage.setItem('afinavoz.settings', JSON.stringify(settings)); } catch { /* */ } };
@@ -42,7 +42,6 @@ async function startMic() {
   }
   $('#micBtn').setAttribute('aria-pressed', 'true');
   $('#micLabel').textContent = 'Micro activo';
-  $('#tHint').textContent = 'Escuchando… canta una nota';
   return true;
 }
 function stopMic() {
@@ -50,23 +49,33 @@ function stopMic() {
   engine.stop();
   $('#micBtn').setAttribute('aria-pressed', 'false');
   $('#micLabel').textContent = 'Activar micro';
-  $('#tuner').dataset.state = 'idle';
-  $('#tHint').textContent = 'Activa el micro y canta una nota';
+  live.track = null;
+  paintVoiceTuner();
+  paintGuitarTuner();
 }
 $('#micBtn').onclick = () => (engine.running ? stopMic() : startMic());
 
 // ---------- Navegación ----------
+// Pestañas: Canto (afinar · canciones · entrenar), Guitarra, Espectro, Progreso
+const GROUP = { tuner: 'voice', songs: 'voice', song: 'voice', take: 'voice', train: 'voice', guitar: 'guitar', spectrum: 'spectrum', progress: 'progress' };
+const SUB = { tuner: 'tuner', songs: 'songs', song: 'songs', take: 'songs', train: 'train' };
+let lastVoiceView = 'tuner';
 function go(v) {
+  if (v === 'voice') v = lastVoiceView;
   view = v;
+  if (SUB[v] && !BACK[v]) lastVoiceView = v;
   document.querySelectorAll('.view').forEach((el) => el.classList.toggle('active', el.id === 'view-' + v));
-  const tab = { song: 'songs', take: 'songs' }[v] || v;
-  document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.go === tab));
-  const titles = { tuner: 'Afinador', songs: 'Canciones', song: 'Canción', take: 'Tu toma', train: 'Entrenar', progress: 'Progreso' };
+  document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.go === GROUP[v]));
+  const sub = $('#subnav');
+  sub.hidden = !SUB[v] || !!BACK[v];
+  sub.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.go === SUB[v])));
+  const titles = { tuner: 'Canto', songs: 'Canto', song: '', take: 'Tu toma', train: 'Canto', guitar: 'Guitarra', spectrum: 'Espectro', progress: 'Progreso' };
   $('#viewTitle').textContent = titles[v];
   $('#backBtn').hidden = !BACK[v];
   if (v !== 'song' && v !== 'take') document.querySelector('.topbar').style.removeProperty('--top-bg');
+  engine.setMode(v === 'guitar' ? 'guitar' : 'voice');
   window.scrollTo(0, 0);
-  ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, tuner: () => {} })[v]?.();
+  ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, guitar: renderGuitar })[v]?.();
 }
 const BACK = { song: 'songs', take: 'song' };
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => {
@@ -114,61 +123,170 @@ $('#tKey').onchange = (e) => { settings.tunerKey = +e.target.value; saveSettings
 $('#tScale').onchange = (e) => { settings.tunerScale = e.target.value; saveSettings(); };
 $('#exRoot').onchange = (e) => { settings.exRoot = +e.target.value; saveSettings(); };
 
-// ---------- Afinador en vivo ----------
-const live = { points: [], recent: [], lastVoiced: 0, center: 60 };
+// ---------- Lectura en vivo ----------
+// El motor entrega ~83 lecturas/s ya suavizadas (js/tracker.js); aquí solo se guardan
+// y la interfaz se pinta una vez por fotograma de pantalla.
+const live = { points: [], track: null, t: 0, center: 60 };
 engine.on((fr) => {
-  const midi = fr.f ? freqToMidi(fr.f, settings.a4) : null;
-  if (midi != null) {
-    live.recent.push(fr.f);
-    if (live.recent.length > 5) live.recent.shift();
-    live.lastVoiced = fr.t;
-  } else if (fr.t - live.lastVoiced > 0.15) live.recent = [];
-  live.points.push({ t: fr.t, midi });
-  while (live.points.length && fr.t - live.points[0].t > 8) live.points.shift();
-  if (midi != null) live.center += (midi - live.center) * 0.05;
-  if (view === 'tuner') updateTunerReadout(fr);
+  const tr = fr.track;
+  live.track = tr;
+  live.t = fr.t;
+  live.points.push({ t: fr.t, midi: tr.voiced ? tr.midi : null });
+  while (live.points.length && fr.t - live.points[0].t > 10) live.points.shift();
 });
 
-function updateTunerReadout(fr) {
-  const needle = $('#tNeedle');
-  const tuner = $('#tuner');
-  if (!live.recent.length) {
-    if (fr.t - live.lastVoiced > 0.6) {
-      $('#tNote').textContent = '–';
-      tuner.dataset.state = 'idle';
-      $('#tHint').textContent = 'Escuchando… canta una nota';
-      needle.style.left = '50%';
-    }
+/** Pinta un medidor de afinación (nota, cents, aguja, pista). */
+function paintMeter(prefix, { note, cents, hz, okTol, warnTol, hint }) {
+  const box = $('#' + prefix + 'Tuner');
+  if (note == null) {
+    box.dataset.state = 'idle';
+    $('#' + prefix + 'Note').textContent = '–';
+    $('#' + prefix + 'Cents').textContent = '0';
+    $('#' + prefix + 'Hz').textContent = '0';
+    $('#' + prefix + 'Needle').style.left = '50%';
+    $('#' + prefix + 'Hint').textContent = hint;
     return;
   }
-  const f = [...live.recent].sort((a, b) => a - b)[Math.floor(live.recent.length / 2)];
-  const midi = freqToMidi(f, settings.a4);
-  const target = nearestScaleMidi(midi, settings.tunerKey, settings.tunerScale);
-  const cents = (midi - target) * 100;
-  $('#tNote').textContent = nn(target);
-  $('#tCents').textContent = signed(cents);
-  $('#tHz').textContent = f.toFixed(1);
-  const pos = 50 + Math.max(-50, Math.min(50, cents));
-  needle.style.left = pos + '%';
   const a = Math.abs(cents);
-  tuner.dataset.state = a <= 10 ? 'ok' : a <= 25 ? 'warn' : 'bad';
-  $('#tHint').textContent = a <= 10 ? 'Afinado' : cents > 0 ? (a > 25 ? 'Alto: baja un poco' : 'Ligeramente alto') : (a > 25 ? 'Bajo: sube un poco' : 'Ligeramente bajo');
+  box.dataset.state = a <= okTol ? 'ok' : a <= warnTol ? 'warn' : 'bad';
+  $('#' + prefix + 'Note').textContent = note;
+  $('#' + prefix + 'Cents').textContent = signed(cents);
+  $('#' + prefix + 'Hz').textContent = hz.toFixed(1);
+  $('#' + prefix + 'Needle').style.left = 50 + Math.max(-50, Math.min(50, cents)) + '%';
+  $('#' + prefix + 'Hint').textContent = hint;
 }
 
-// ---------- Bucle de dibujo ----------
+function paintVoiceTuner() {
+  const tr = live.track;
+  if (!tr || !tr.voiced) return paintMeter('t', { note: null, hint: engine.running ? 'Escuchando… canta una nota' : 'Activa el micro y canta una nota' });
+  const target = settings.tunerScale === 'chromatic' ? tr.note : nearestScaleMidi(tr.steady, settings.tunerKey, settings.tunerScale);
+  const cents = (tr.steady - target) * 100;
+  const a = Math.abs(cents);
+  paintMeter('t', {
+    note: nn(target), cents, hz: midiToFreq(tr.steady, settings.a4), okTol: 10, warnTol: 25,
+    hint: a <= 10 ? 'Afinado' : cents > 0 ? (a > 25 ? 'Alto: baja un poco' : 'Ligeramente alto') : (a > 25 ? 'Bajo: sube un poco' : 'Ligeramente bajo'),
+  });
+}
+
+// ---------- Afinador de guitarra ----------
+const guitar = { locked: null, tuned: new Set(), okSince: null };
+const tuningNotes = () => (GUITAR_TUNINGS[settings.guitarTuning] || GUITAR_TUNINGS.standard).notes;
+
+function renderGuitar() {
+  const sel = $('#gTuning');
+  sel.innerHTML = Object.entries(GUITAR_TUNINGS).map(([k, t]) => `<option value="${k}">${t.name}</option>`).join('');
+  sel.value = settings.guitarTuning;
+  const notes = tuningNotes();
+  $('#gStrings').innerHTML = notes.map((m, i) => `<button class="string" data-i="${i}" aria-pressed="false" aria-label="Cuerda ${6 - i}: ${nn(m)}">
+      <span class="string-num">${6 - i}</span><span class="string-note">${nn(m, false)}</span><span class="string-oct">${Math.floor(m / 12) - 1}</span></button>`).join('');
+  $('#gStrings').querySelectorAll('.string').forEach((b) => (b.onclick = () => {
+    const i = +b.dataset.i;
+    guitar.locked = guitar.locked === i ? null : i;
+    if (guitar.locked !== null) engine.playTone(notes[i], 1.6);
+    paintGuitarStrings(null);
+    $('#gMode').textContent = guitar.locked === null ? 'Automático: toca cualquier cuerda' : `Fijada la cuerda ${6 - i} · toca otra vez para soltarla`;
+  }));
+  guitar.tuned.clear();
+  guitar.locked = null;
+  $('#gMode').textContent = 'Automático: toca cualquier cuerda';
+  paintGuitarStrings(null);
+}
+$('#gTuning').onchange = (e) => { settings.guitarTuning = e.target.value; saveSettings(); renderGuitar(); };
+
+function paintGuitarStrings(active) {
+  $('#gStrings').querySelectorAll('.string').forEach((b) => {
+    const i = +b.dataset.i;
+    b.classList.toggle('active', i === active);
+    b.classList.toggle('tuned', guitar.tuned.has(i));
+    b.setAttribute('aria-pressed', String(guitar.locked === i));
+  });
+}
+
+function paintGuitarTuner() {
+  const tr = live.track;
+  if (!tr || !tr.voiced) {
+    guitar.okSince = null;
+    paintGuitarStrings(guitar.locked);
+    return paintMeter('g', { note: null, hint: engine.running ? 'Toca una cuerda al aire' : 'Activa el micro y toca una cuerda' });
+  }
+  const notes = tuningNotes();
+  const i = guitar.locked ?? nearestString(tr.steady, notes);
+  const cents = (tr.steady - notes[i]) * 100;
+  const a = Math.abs(cents);
+  if (a <= 4) {
+    guitar.okSince ??= live.t;
+    if (live.t - guitar.okSince > 0.5) guitar.tuned.add(i);
+  } else guitar.okSince = null;
+  paintGuitarStrings(i);
+  paintMeter('g', {
+    note: nn(notes[i]), cents, hz: midiToFreq(tr.steady, settings.a4), okTol: 4, warnTol: 15,
+    hint: a <= 4 ? `Cuerda ${6 - i} afinada` : cents < 0 ? 'Aprieta la clavija (sube)' : 'Afloja la clavija (baja)',
+  });
+}
+
+// ---------- Analizador de espectro ----------
+const SPEC_RANGES = { voice: [60, 5000], full: [20, 20000], bass: [20, 600] };
+const spec = { frozen: false, hold: null, last: null };
+$('#spFreeze').onclick = () => {
+  spec.frozen = !spec.frozen;
+  $('#spFreeze').textContent = spec.frozen ? 'Reanudar' : 'Congelar';
+  $('#spFreeze').setAttribute('aria-pressed', String(spec.frozen));
+};
+$('#spHoldBtn').onclick = () => {
+  settings.spHold = !settings.spHold;
+  saveSettings();
+  spec.hold = null;
+  $('#spHoldBtn').setAttribute('aria-pressed', String(settings.spHold));
+};
+$('#spRange').onchange = (e) => { settings.spRange = e.target.value; saveSettings(); spec.hold = null; clearSpectrogram($('#spGram')); };
+
+function paintSpectrum() {
+  const sr = engine.ctx.sampleRate;
+  if (!spec.frozen) {
+    const db = engine.getSpectrum();
+    spec.last = Float32Array.from(db);
+    if (settings.spHold) {
+      if (!spec.hold || spec.hold.length !== db.length) spec.hold = Float32Array.from(db);
+      else for (let k = 0; k < db.length; k++) spec.hold[k] = Math.max(spec.hold[k] - 0.15, db[k]);
+    }
+  }
+  const [fMin, fMax] = SPEC_RANGES[settings.spRange] || SPEC_RANGES.voice;
+  const peak = spectrumPeak(spec.last, sr, fMin, fMax);
+  const tr = live.track;
+  const fund = tr && tr.voiced ? midiToFreq(tr.steady, settings.a4) : null;
+  drawSpectrum($('#spCanvas'), { db: spec.last, hold: settings.spHold ? spec.hold : null, sampleRate: sr, fMin, fMax, fundamental: fund, notation: settings.notation });
+  if (!spec.frozen) drawSpectrogramColumn($('#spGram'), { db: spec.last, sampleRate: sr, fMin, fMax });
+  $('#spFund').textContent = fund ? `${nn(freqToMidi(fund, settings.a4))} · ${fund.toFixed(1)} Hz` : '—';
+  $('#spPeak').textContent = peak && peak.db > -90 ? `${peak.freq < 1000 ? peak.freq.toFixed(1) + ' Hz' : (peak.freq / 1000).toFixed(2) + ' kHz'}` : '—';
+  $('#spLevel').textContent = peak ? `${Math.round(peak.db)} dB` : '—';
+}
+
+// ---------- Bucle de dibujo (un pintado por fotograma de pantalla) ----------
 function frameLoop() {
   if (engine.running) {
+    const tr = live.track;
+    if (tr && tr.voiced) live.center += (tr.midi - live.center) * 0.04;
     if (view === 'tuner') {
+      paintVoiceTuner();
       const now = engine.ctx.currentTime;
       drawRoll($('#tRoll'), {
         points: live.points, t0: now - 6, t1: now,
         lo: live.center - 7, hi: live.center + 7,
         keyPc: settings.tunerKey, scale: settings.tunerScale, notation: settings.notation,
       });
-    } else if (view === 'song' && recording) drawRecordingRoll();
+    } else if (view === 'guitar') paintGuitarTuner();
+    else if (view === 'spectrum') paintSpectrum();
+    else if (view === 'song' && recording) drawRecordingRoll();
     else if (view === 'train' && exercise) drawExerciseRoll();
   }
   requestAnimationFrame(frameLoop);
+}
+
+/** Puntos de la curva en vivo desde el inicio de la grabación actual (tiempos relativos). */
+function livePointsSince(t0, map = (m) => m) {
+  const out = [];
+  for (const p of live.points) if (p.t >= t0) out.push({ t: p.t - t0, midi: p.midi == null ? null : map(p.midi, p.t - t0) });
+  return out;
 }
 
 // ---------- Canciones ----------
@@ -277,19 +395,16 @@ $('#sRec').onclick = async () => {
 };
 
 function drawRecordingRoll() {
-  const frames = engine.rec?.frames || [];
-  const now = frames.length ? frames[frames.length - 1].t : 0;
-  const pts = [];
-  for (let i = Math.max(0, frames.length - 500); i < frames.length; i++) {
-    const f = frames[i];
-    pts.push({ t: f.t, midi: f.f ? freqToMidi(f.f, settings.a4) : null });
-  }
-  const lastV = pts.filter((p) => p.midi != null).slice(-1)[0];
-  if (lastV) recording.center += (lastV.midi - recording.center) * 0.05;
+  if (!engine.rec) return;
+  const now = engine.ctx.currentTime - engine.rec.t0;
+  const pts = livePointsSince(engine.rec.t0);
+  const tr = live.track;
+  if (tr && tr.voiced) recording.center += (tr.midi - recording.center) * 0.04;
   $('#sTimer').textContent = fmtTime(now);
-  if (lastV && now - lastV.t < 0.3) {
-    const target = nearestScaleMidi(lastV.midi, currentSong.keyPc, currentSong.scale);
-    $('#sNow').innerHTML = `${nn(target)} <span style="color:${errColor(Math.abs((lastV.midi - target) * 100))}">${signed((lastV.midi - target) * 100)} cents</span>`;
+  if (tr && tr.voiced) {
+    const target = nearestScaleMidi(tr.steady, currentSong.keyPc, currentSong.scale);
+    const c = (tr.steady - target) * 100;
+    $('#sNow').innerHTML = `${nn(target)} <span style="color:${errColor(Math.abs(c))}">${signed(c)} cents</span>`;
   }
   drawRoll($('#sRoll'), {
     points: pts, t0: Math.max(0, now - 8), t1: Math.max(8, now),
@@ -490,20 +605,19 @@ $('#exStart').onclick = async () => {
 
 function drawExerciseRoll() {
   const ex = exercise;
-  const frames = ex.phase === 'sing' ? engine.rec?.frames || [] : [];
+  const singing = ex.phase === 'sing' && engine.rec;
   const total = ex.targets.length * ex.dur;
-  const now = frames.length ? frames[frames.length - 1].t : 0;
+  const now = singing ? engine.ctx.currentTime - engine.rec.t0 : 0;
+  // la curva se traslada a la octava del ejercicio para poder compararla
+  const fold = (m, t) => {
+    const ref = ex.targets[Math.min(ex.targets.length - 1, Math.max(0, Math.floor(t / ex.dur)))];
+    return m - 12 * Math.round((m - ref) / 12);
+  };
   drawRoll($('#exRoll'), {
-    // la curva se traslada a la octava del ejercicio para poder compararla
-    points: frames.map((f) => {
-      if (!f.f) return { t: f.t, midi: null };
-      const m = freqToMidi(f.f, settings.a4);
-      const ref = ex.targets[Math.min(ex.targets.length - 1, Math.floor(f.t / ex.dur))];
-      return { t: f.t, midi: m - 12 * Math.round((m - ref) / 12) };
-    }),
+    points: singing ? livePointsSince(engine.rec.t0, fold) : [],
     lanes: ex.lanes.length ? ex.lanes : ex.targets.map((m, i) => ({ start: i * ex.dur, end: (i + 1) * ex.dur, midi: m })),
     t0: 0, t1: total, lo: Math.min(...ex.targets) - 4, hi: Math.max(...ex.targets) + 4,
-    notation: settings.notation, playhead: ex.phase === 'sing' ? now : null,
+    notation: settings.notation, playhead: singing ? now : null,
   });
 }
 
@@ -593,11 +707,11 @@ function bindSettings() {
 
 $('#exportBtn').onclick = async () => {
   const [songs, takes, training] = await Promise.all([db.all('songs'), db.all('takes'), db.all('training')]);
-  const data = { app: 'afinavoz', version: 1, exported: Date.now(), settings, songs, takes: takes.map(({ audio, ...t }) => t), training };
+  const data = { app: 'musicman', version: 1, exported: Date.now(), settings, songs, takes: takes.map(({ audio, ...t }) => t), training };
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
   const a = document.createElement('a');
   a.href = url;
-  a.download = `afinavoz-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `musicman-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast('Copia exportada (sin audios).');
@@ -607,7 +721,7 @@ $('#importInput').onchange = async (e) => {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
-    if (data.app !== 'afinavoz') throw new Error('formato');
+    if (!['musicman', 'afinavoz'].includes(data.app)) throw new Error('formato');
     for (const s of data.songs || []) await db.put('songs', s);
     for (const t of data.takes || []) await db.put('takes', t);
     for (const t of data.training || []) await db.put('training', t);
@@ -631,4 +745,4 @@ requestAnimationFrame(frameLoop);
 window.addEventListener('resize', () => view === 'progress' && renderProgress());
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 // Exponer para pruebas manuales
-window.afinavoz = { engine, db, go };
+window.musicman = { engine, db, go };

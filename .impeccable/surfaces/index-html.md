@@ -5,7 +5,7 @@ primary_target: "index.html"
 related_targets: []
 ---
 
-# AfinaVoz app shell (todas las pantallas)
+# MUSIC MAN app shell (todas las pantallas)
 
 Mode: Operate. Audiencia: cantantes practicando en casa, ensayos, camerino, clases. Tarea: ver la afinación de un vistazo, grabar tomas por canción, entrenar, seguir el progreso.
 

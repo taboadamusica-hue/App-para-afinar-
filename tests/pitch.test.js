@@ -50,3 +50,22 @@ test('nota de escala más cercana', () => {
   // La menor: Sol# no, Sol sí
   assert.equal(nearestScaleMidi(67.9, 9, 'minor'), 67);
 });
+
+test('afinaciones de guitarra y cuerda más cercana', async () => {
+  const { GUITAR_TUNINGS, nearestString } = await import('../js/pitch.js');
+  const std = GUITAR_TUNINGS.standard.notes;
+  assert.deepEqual(std.map((m) => noteName(m, 'english')), ['E2', 'A2', 'D3', 'G3', 'B3', 'E4']);
+  assert.equal(nearestString(45.3, std), 1);   // La2 algo alta → 5ª cuerda
+  assert.equal(nearestString(63.6, std), 5);   // Mi4 algo baja → 1ª cuerda
+  assert.equal(GUITAR_TUNINGS.dropD.notes[0], 38);
+});
+
+test('pico del espectro con interpolación', async () => {
+  const { spectrumPeak } = await import('../js/draw.js');
+  const n = 4096, sr = 48000, binHz = sr / (2 * n);
+  const db = new Float32Array(n).fill(-110);
+  const f = 440, k = f / binHz;
+  for (let i = 0; i < n; i++) db[i] = Math.max(-110, -20 - 40 * (i - k) ** 2);
+  const p = spectrumPeak(db, sr, 60, 5000);
+  assert.ok(Math.abs(p.freq - 440) < 1, String(p.freq));
+});

@@ -10,11 +10,11 @@ web
 
 ## Users
 
-Cantantes en general que quieren afinar mejor y entrenar la voz con el móvil. Lo usan en cuatro situaciones: practicando en casa (sesiones tranquilas, móvil en el atril o la mesa), en ensayos con banda (local de ensayo, poca luz, ruido), antes de actuar (calentamiento rápido en camerino) y en clases de canto (revisando tomas junto a un profesor).
+Músicos en general —sobre todo cantantes y guitarristas— que quieren afinar mejor y entrenar con el móvil. Lo usan en cuatro situaciones: practicando en casa (sesiones tranquilas, móvil en el atril o la mesa), en ensayos con banda (local de ensayo, poca luz, ruido), antes de actuar (calentamiento rápido en camerino) y en clases de canto (revisando tomas junto a un profesor).
 
 ## Product Purpose
 
-Un "Melodyne de bolsillo": escuchar tu voz por el micrófono, mostrar en tiempo real lo afinado que cantas, registrar tomas por canción y medir la evolución. Además juzga cómo cantas: afinación, estabilidad, vibrato, tono de voz (brillo, aire, dinámica) y emoción transmitida. Éxito = el cantante canta más afinado con el tiempo y entiende qué corregir.
+MUSIC MAN reúne tres herramientas: profesor de canto, afinador de guitarra y analizador de espectro. El profesor de canto es un "Melodyne de bolsillo": escuchar tu voz por el micrófono, mostrar en tiempo real lo afinado que cantas, registrar tomas por canción y medir la evolución. Además juzga cómo cantas: afinación, estabilidad, vibrato, tono de voz (brillo, aire, dinámica) y emoción transmitida. Éxito = el cantante canta más afinado con el tiempo y entiende qué corregir.
 
 ## Positioning
 
@@ -28,7 +28,9 @@ Combina tres cosas que normalmente van separadas: afinador en vivo, registro de 
 
 ## Capabilities and Constraints
 
-- Afinador en vivo (YIN), tonalidad/escala de referencia, notación Do-Re-Mi o C-D-E, La4 configurable.
+- Afinador de voz en vivo (YIN + seguimiento fluido), tonalidad/escala de referencia, notación Do-Re-Mi o C-D-E, La4 configurable.
+- Afinador de guitarra: detección automática de cuerda o cuerda fijada con tono de referencia; afinaciones alternativas.
+- Analizador de espectro: espectro logarítmico con retención de picos, fundamental y armónicos, espectrograma.
 - Canciones con tomas (curva de tono + audio), informe con puntuación, piano-roll sincronizado, consejos.
 - Entrenamiento: nota sostenida, nota al azar, escalas, arpegio; cualquier octava vale.
 - Progreso: racha, minutos, gráficas, mejora por canción, rango vocal.
@@ -37,7 +39,7 @@ Combina tres cosas que normalmente van separadas: afinador en vivo, registro de 
 
 ## Brand Commitments
 
-Nombre: AfinaVoz. Interfaz en español.
+Nombre: **MUSIC MAN** (en mayúsculas; antes «AfinaVoz»). Interfaz en español.
 
 ## Evidence on Hand
 
@@ -45,7 +47,8 @@ No hay usuarios, testimonios ni métricas reales todavía; no inventarlos.
 
 ## Product Principles
 
-1. Legible de un vistazo y a distancia mientras se canta.
+1. Legible de un vistazo y a distancia mientras se canta o se toca.
+5. La captación debe sentirse fluida: respuesta inmediata al cambiar de nota y lectura quieta cuando la nota está quieta.
 2. Honesto: medir con precisión y decir claramente qué es estimación.
 3. Animar a practicar: el progreso debe sentirse, sin infantilizar.
 4. Todo en el bolsillo: rápido, offline, privado.

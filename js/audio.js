@@ -1,6 +1,7 @@
 // Motor de micrófono: captura, detección de tono por frame, grabación y tonos de referencia.
 import { detectPitch, rms, midiToFreq } from './pitch.js';
 import { spectralCentroid } from './analysis.js';
+import { PitchTracker } from './tracker.js';
 
 export class MicEngine {
   constructor(getSettings) {
@@ -8,6 +9,16 @@ export class MicEngine {
     this.listeners = new Set();
     this.running = false;
     this.rec = null;
+    this.tracker = new PitchTracker('voice');
+    this.gateOpen = false;
+    this.wantSpectrum = false;
+  }
+
+  /** 'voice' o 'guitar': ajusta el suavizado del seguimiento. */
+  setMode(mode) {
+    if (this.mode === mode) return;
+    this.mode = mode;
+    this.tracker.setPreset(mode);
   }
 
   async ensureContext() {
@@ -27,11 +38,21 @@ export class MicEngine {
     this.analyser.fftSize = 2048;
     this.analyser.smoothingTimeConstant = 0;
     this.src.connect(this.analyser);
+    // Analizador aparte, de alta resolución, para la vista de espectro
+    this.specAnalyser = ctx.createAnalyser();
+    this.specAnalyser.fftSize = 8192;
+    this.specAnalyser.smoothingTimeConstant = 0.55;
+    this.specAnalyser.minDecibels = -110;
+    this.specAnalyser.maxDecibels = -10;
+    this.src.connect(this.specAnalyser);
+    this.specBuf = new Float32Array(this.specAnalyser.frequencyBinCount);
     this.timeBuf = new Float32Array(this.analyser.fftSize);
     this.freqBuf = new Float32Array(this.analyser.frequencyBinCount);
+    this.tracker.reset();
     this.running = true;
-    // setInterval en lugar de rAF para seguir midiendo aunque la pestaña pierda el foco
-    this.timer = setInterval(() => this.tick(), 20);
+    // Medimos cada 12 ms (≈83 lecturas/s) sobre una ventana deslizante: la curva
+    // se mueve con fluidez. setInterval sigue funcionando aunque la pestaña pierda el foco.
+    this.timer = setInterval(() => this.tick(), 12);
   }
 
   stop() {
@@ -47,18 +68,31 @@ export class MicEngine {
     this.analyser.getFloatTimeDomainData(this.timeBuf);
     const a = rms(this.timeBuf);
     const gate = Math.pow(10, -(22 + sensitivity * 4) / 20); // sensibilidad 5 → -42 dBFS
+    // Umbral con histéresis: se abre con la voz y no se cierra hasta que baja bastante,
+    // así los finales de frase y los pianos no se cortan.
+    this.gateOpen = this.gateOpen ? a > gate * 0.45 : a > gate;
     let f = 0, c = 0, b = 0;
-    if (a > gate) {
-      const p = detectPitch(this.timeBuf, this.ctx.sampleRate, { minFreq: 60, maxFreq: 1400 });
-      if (p && p.clarity > 0.75) {
+    if (this.gateOpen) {
+      const p = detectPitch(this.timeBuf, this.ctx.sampleRate, { minFreq: 60, maxFreq: 1400, threshold: 0.2 });
+      if (p && p.clarity > 0.7) {
         f = p.freq; c = p.clarity;
         this.analyser.getFloatFrequencyData(this.freqBuf);
         b = spectralCentroid(this.freqBuf, this.ctx.sampleRate, this.analyser.fftSize);
       }
     }
-    const frame = { t: this.ctx.currentTime, f, c, a, b, a4 };
-    if (this.rec) this.rec.frames.push({ ...frame, t: frame.t - this.rec.t0 });
+    const t = this.ctx.currentTime;
+    const tr = this.tracker.update(f, t, a4);
+    // f = frecuencia corregida (octavas y saltos espurios) para grabar y analizar
+    const frame = { t, f: tr.freq, c: tr.freq ? c : 0, a, b: tr.freq ? b : 0, a4, track: tr };
+    if (this.rec) this.rec.frames.push({ t: t - this.rec.t0, f: frame.f, c: frame.c, a, b: frame.b });
     this.listeners.forEach((fn) => fn(frame));
+  }
+
+  /** Espectro en dB (Float32Array) del analizador de alta resolución. */
+  getSpectrum() {
+    if (!this.running) return null;
+    this.specAnalyser.getFloatFrequencyData(this.specBuf);
+    return this.specBuf;
   }
 
   on(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }

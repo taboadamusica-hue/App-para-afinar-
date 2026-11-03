@@ -15,6 +15,26 @@ export const SCALES = {
   blues: { name: 'Blues', steps: [0, 3, 5, 6, 7, 10] },
 };
 
+// Afinaciones de guitarra (MIDI de la 6ª a la 1ª cuerda)
+export const GUITAR_TUNINGS = {
+  standard: { name: 'Estándar', notes: [40, 45, 50, 55, 59, 64] },
+  dropD: { name: 'Drop D', notes: [38, 45, 50, 55, 59, 64] },
+  halfDown: { name: 'Medio tono abajo', notes: [39, 44, 49, 54, 58, 63] },
+  fullDown: { name: 'Un tono abajo', notes: [38, 43, 48, 53, 57, 62] },
+  dropC: { name: 'Drop C', notes: [36, 43, 48, 53, 57, 62] },
+  dadgad: { name: 'DADGAD', notes: [38, 45, 50, 55, 57, 62] },
+  openG: { name: 'Open G', notes: [38, 43, 50, 55, 59, 62] },
+  openD: { name: 'Open D', notes: [38, 45, 50, 54, 57, 62] },
+  openE: { name: 'Open E', notes: [40, 47, 52, 56, 59, 64] },
+};
+
+/** Cuerda más cercana (índice) a un MIDI dado. */
+export function nearestString(midi, notes) {
+  let best = 0;
+  for (let i = 1; i < notes.length; i++) if (Math.abs(midi - notes[i]) < Math.abs(midi - notes[best])) best = i;
+  return best;
+}
+
 /**
  * YIN pitch detector.
  * @param {Float32Array} buf  señal mono

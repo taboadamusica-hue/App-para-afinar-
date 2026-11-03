@@ -1,6 +1,6 @@
 {
-  "name": "AfinaVoz – afinador y entrenador vocal",
-  "short_name": "AfinaVoz",
+  "name": "MUSIC MAN – profesor de canto, afinador y espectro",
+  "short_name": "MUSIC MAN",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0e0e10",
