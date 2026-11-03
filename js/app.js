@@ -3,7 +3,7 @@ import { freqToMidi, noteName, nearestScaleMidi, NOTE_NAMES, SCALES } from './pi
 import { analyzeTake, scoreSustain, scoreSequence, EMOTION_LIST } from './analysis.js';
 import { MicEngine } from './audio.js';
 import * as db from './db.js';
-import { drawRoll, drawChart, ringSvg, circumplexSvg, errColor } from './draw.js';
+import { drawRoll, drawChart, circumplexSvg, errColor } from './draw.js';
 
 // ---------- Ajustes ----------
 const DEFAULTS = { notation: 'latin', a4: 440, sensitivity: 5, saveAudio: true, tunerKey: 0, tunerScale: 'chromatic', exRoot: 57 };
@@ -41,16 +41,17 @@ async function startMic() {
     return false;
   }
   $('#micBtn').setAttribute('aria-pressed', 'true');
-  $('#micLabel').textContent = 'Activo';
-  $('#tHint').textContent = 'Escuchando…';
+  $('#micLabel').textContent = 'Micro activo';
+  $('#tHint').textContent = 'Escuchando… canta una nota';
   return true;
 }
 function stopMic() {
   if (recording || exercise) return;
   engine.stop();
   $('#micBtn').setAttribute('aria-pressed', 'false');
-  $('#micLabel').textContent = 'Micro';
-  $('#tHint').innerHTML = 'Pulsa <b>Micro</b> y canta una nota.';
+  $('#micLabel').textContent = 'Activar micro';
+  $('#tuner').dataset.state = 'idle';
+  $('#tHint').textContent = 'Activa el micro y canta una nota';
 }
 $('#micBtn').onclick = () => (engine.running ? stopMic() : startMic());
 
@@ -60,13 +61,33 @@ function go(v) {
   document.querySelectorAll('.view').forEach((el) => el.classList.toggle('active', el.id === 'view-' + v));
   const tab = { song: 'songs', take: 'songs' }[v] || v;
   document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.go === tab));
+  const titles = { tuner: 'Afinador', songs: 'Canciones', song: 'Canción', take: 'Tu toma', train: 'Entrenar', progress: 'Progreso' };
+  $('#viewTitle').textContent = titles[v];
+  $('#backBtn').hidden = !BACK[v];
+  if (v !== 'song' && v !== 'take') document.querySelector('.topbar').style.removeProperty('--top-bg');
   window.scrollTo(0, 0);
   ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, tuner: () => {} })[v]?.();
 }
+const BACK = { song: 'songs', take: 'song' };
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => {
   if (recording) return toast('Detén la grabación primero.');
   go(b.dataset.go);
 }));
+$('#backBtn').onclick = () => {
+  if (recording) return toast('Detén la grabación primero.');
+  if (BACK[view]) go(BACK[view]);
+};
+
+/** Color propio de cada canción (tono derivado del título) e iniciales para su portada. */
+function songHue(s) {
+  let h = 0;
+  for (const ch of (s.title || '') + (s.artist || '')) h = (h * 31 + ch.codePointAt(0)) % 360;
+  return h;
+}
+const initials = (t) => (t || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+const coverHtml = (s, cls = '') => `<span class="cover ${cls}" style="--hue:${songHue(s)}" aria-hidden="true">${esc(initials(s.title))}</span>`;
+const scoreCls = (v) => (v >= 80 ? 'score-hi' : v >= 55 ? 'score-mid' : 'score-lo');
+const CHEV = '<svg class="chev" aria-hidden="true"><use href="#i-chev"/></svg>';
 
 // ---------- Selects compartidos ----------
 function fillKeySelect(sel, value) {
@@ -110,10 +131,12 @@ engine.on((fr) => {
 
 function updateTunerReadout(fr) {
   const needle = $('#tNeedle');
+  const tuner = $('#tuner');
   if (!live.recent.length) {
     if (fr.t - live.lastVoiced > 0.6) {
       $('#tNote').textContent = '–';
-      needle.className = 'needle';
+      tuner.dataset.state = 'idle';
+      $('#tHint').textContent = 'Escuchando… canta una nota';
       needle.style.left = '50%';
     }
     return;
@@ -128,8 +151,8 @@ function updateTunerReadout(fr) {
   const pos = 50 + Math.max(-50, Math.min(50, cents));
   needle.style.left = pos + '%';
   const a = Math.abs(cents);
-  needle.className = 'needle ' + (a <= 10 ? 'ok' : a <= 25 ? 'warn' : 'bad');
-  $('#tHint').textContent = a <= 10 ? '¡Afinado!' : cents > 0 ? 'Un poco alto ↓' : 'Un poco bajo ↑';
+  tuner.dataset.state = a <= 10 ? 'ok' : a <= 25 ? 'warn' : 'bad';
+  $('#tHint').textContent = a <= 10 ? 'Afinado' : cents > 0 ? (a > 25 ? 'Alto: baja un poco' : 'Ligeramente alto') : (a > 25 ? 'Bajo: sube un poco' : 'Ligeramente bajo');
 }
 
 // ---------- Bucle de dibujo ----------
@@ -149,7 +172,7 @@ function frameLoop() {
 }
 
 // ---------- Canciones ----------
-const emptyMsg = (txt) => `<div class="card empty">${txt}</div>`;
+const emptyMsg = (title, txt) => `<div class="empty"><b>${title}</b>${txt}</div>`;
 
 async function renderSongs() {
   const [songs, takes] = await Promise.all([db.all('songs'), db.all('takes')]);
@@ -161,12 +184,12 @@ async function renderSongs() {
       const ts = (bySong[s.id] || []).sort((a, b) => a.date - b.date);
       const last = ts[ts.length - 1];
       const best = ts.reduce((m, t) => Math.max(m, t.summary.score), 0);
-      return `<div class="card song-item" data-id="${s.id}">
-        <div class="info"><div class="title">${esc(s.title)}</div>
-        <div class="muted small">${esc(s.artist || 'Sin artista')} · ${NOTE_NAMES[settings.notation][s.keyPc]} ${SCALES[s.scale].name.toLowerCase()} · ${ts.length} toma${ts.length === 1 ? '' : 's'}${best ? ` · mejor ${best}` : ''}</div></div>
-        <div class="badge">${last ? last.summary.score : '–'}<small>última</small></div></div>`;
+      return `<button class="row-item song-item" data-id="${s.id}">${coverHtml(s)}
+        <span class="row-text"><span class="row-title">${esc(s.title)}</span>
+        <span class="row-sub">${esc(s.artist || 'Sin artista')} · ${ts.length} toma${ts.length === 1 ? '' : 's'}${best ? ` · mejor ${best}` : ''}</span></span>
+        ${last ? `<span class="row-score ${scoreCls(last.summary.score)}">${last.summary.score}</span>` : CHEV}</button>`;
     }).join('')
-    : emptyMsg('Aún no tienes canciones.<br>Crea una para empezar a registrar tu afinación.');
+    : emptyMsg('Tu biblioteca está vacía', 'Añade la canción que estás preparando y graba tu primera toma.');
   document.querySelectorAll('.song-item').forEach((el) => (el.onclick = async () => {
     currentSong = await db.get('songs', el.dataset.id);
     go('song');
@@ -215,15 +238,21 @@ async function renderSong() {
   if (!currentSong) return go('songs');
   const s = currentSong;
   $('#sTitle').textContent = s.title;
+  $('#songHero').style.setProperty('--hue', songHue(s));
+  document.querySelector('.topbar').style.setProperty('--top-bg', `hsl(${songHue(s)} 45% 30%)`);
+  $('#sCover').style.setProperty('--hue', songHue(s));
+  $('#sCover').textContent = initials(s.title);
+  $('#viewTitle').textContent = '';
   const emo = EMOTION_LIST.find((e) => e.id === s.targetEmotion);
   $('#sMeta').textContent = `${s.artist || 'Sin artista'} · ${NOTE_NAMES[settings.notation][s.keyPc]} ${SCALES[s.scale].name.toLowerCase()}${emo ? ` · busca: ${emo.emoji} ${emo.label}` : ''}`;
   const takes = (await db.takesBySong(s.id)).sort((a, b) => b.date - a.date);
   $('#takeList').innerHTML = takes.length
-    ? takes.map((t, i) => `<div class="card take-item" data-id="${t.id}">
-        <div class="info"><b>Toma ${takes.length - i}</b> <span class="muted small">· ${fmtDate(t.date)} · ${fmtTime(t.duration)}</span>
-        <div class="muted small">±${t.summary.meanAbsCents.toFixed(0)} cents · ${t.summary.inTunePct.toFixed(0)}% afinado${t.summary.emotionLabel ? ' · ' + t.summary.emotionLabel : ''}</div></div>
-        <div class="badge">${t.summary.score}</div></div>`).join('')
-    : emptyMsg('Pulsa el botón rojo y canta la canción.<br>Cada toma queda registrada para ver tu evolución.');
+    ? takes.map((t, i) => `<button class="row-item take-item" data-id="${t.id}">
+        <span class="row-num">${takes.length - i}</span>
+        <span class="row-text"><span class="row-title">Toma ${takes.length - i}</span>
+        <span class="row-sub">${fmtDate(t.date)} · ${fmtTime(t.duration)} · ±${t.summary.meanAbsCents.toFixed(0)} cents</span></span>
+        <span class="row-score ${scoreCls(t.summary.score)}">${t.summary.score}</span></button>`).join('')
+    : emptyMsg('Sin tomas todavía', 'Pulsa el botón rojo y canta la canción. Cada toma queda registrada para ver tu evolución.');
   document.querySelectorAll('.take-item').forEach((el) => (el.onclick = () => { currentTakeId = el.dataset.id; renderTake(); }));
   const chron = [...takes].reverse();
   drawChart($('#sTrend'), chron.map((t) => ({ x: t.date, y: t.summary.score })), { yMin: 0, yMax: 100, empty: 'Tu evolución aparecerá aquí' });
@@ -310,48 +339,53 @@ async function renderTake() {
   const frames = db.unpackFrames(take.frames);
   const a = analyzeTake(frames, songOpts(song));
   go('take');
-  const bar = (label, v) => `<div><div class="bar-label"><span>${label}</span><b>${Math.round(v)}</b></div><div class="bar"><i style="width:${Math.max(0, Math.min(100, v))}%;background:${v >= 80 ? 'var(--accent)' : v >= 55 ? 'var(--warn)' : 'var(--bad)'}"></i></div></div>`;
-  const pct = (label, v) => `<div><div class="bar-label"><span>${label}</span><b>${Math.round(v * 100)}%</b></div><div class="bar"><i style="width:${v * 100}%;background:var(--curve)"></i></div></div>`;
+  const sub = (label, v) => `<div class="sub"><b>${Math.round(v)}</b><span>${label}</span><div class="bar"><i style="width:${Math.max(0, Math.min(100, v))}%"></i></div></div>`;
+  const meter = (label, v, lo, hi) => `<div class="meter-row"><div class="bar-label"><span>${label}</span><span class="muted">${v < 0.33 ? lo : v > 0.66 ? hi : 'Medio'}</span></div><div class="bar"><i style="width:${Math.max(3, v * 100)}%"></i></div></div>`;
+  const hue = songHue(song);
+  document.querySelector('.topbar').style.setProperty('--top-bg', `hsl(${hue} 45% 30%)`);
+  const head = `<div class="hero report-hero bleed" style="--hue:${hue}">
+      <div class="report-song">${esc(song.title)} · ${fmtDate(take.date)} · ${fmtTime(take.duration)}</div>`;
 
   if (a.empty) {
-    $('#takeReport').innerHTML = `<div class="card"><h2>${esc(song.title)}</h2><p>${a.tips[0]}</p><button id="delTake" class="btn danger">Eliminar toma</button></div>`;
+    $('#takeReport').innerHTML = `${head}<div class="big-score">–</div><div class="big-score-label">${esc(a.tips[0])}</div></div>
+      <div class="btn-row"><button id="delTake" class="btn btn-dark danger">Eliminar toma</button></div>`;
   } else {
     const e = a.emotion;
-    $('#takeReport').innerHTML = `
-      <div class="card">
-        <h2>${esc(song.title)}</h2><div class="muted small">${fmtDate(take.date)} · ${fmtTime(take.duration)}</div>
-        <div class="score-head" style="margin-top:12px">${ringSvg(a.score)}
-          <div class="subscores">${bar('Afinación', a.tuning.score)}${bar('Estabilidad', a.stability.score)}${bar('Expresividad', a.expressiveness)}</div>
-        </div>
+    $('#takeReport').innerHTML = `${head}
+        <div class="big-score">${a.score}</div>
+        <div class="big-score-label">puntuación de la toma</div>
+        <div class="subs">${sub('Afinación', a.tuning.score)}${sub('Estabilidad', a.stability.score)}${sub('Expresividad', a.expressiveness)}</div>
       </div>
-      <div class="card">
-        <div class="playbar">${take.audio ? `<audio id="takeAudio" controls preload="metadata"></audio>` : '<span class="muted small">Audio no guardado</span>'}</div>
-        <canvas id="takeRoll" class="roll" height="260" style="margin-top:10px"></canvas>
-        <input id="takeScroll" type="range" min="0" max="${Math.max(0, take.duration - 10).toFixed(2)}" step="0.05" value="0" ${take.duration <= 10 ? 'hidden' : ''}/>
-        <div class="muted small">Bloques: verde ≤15 cents, amarillo ≤30, rojo &gt;30. La línea discontinua es la nota correcta.</div>
+      <div class="player">${take.audio ? `<audio id="takeAudio" controls preload="metadata"></audio>` : '<span class="muted">Audio no guardado en esta toma</span>'}</div>
+      <canvas id="takeRoll" class="roll bleed" height="260"></canvas>
+      <input id="takeScroll" type="range" aria-label="Desplazar la vista de la toma" min="0" max="${Math.max(0, take.duration - 10).toFixed(2)}" step="0.05" value="0" ${take.duration <= 10 ? 'hidden' : ''}/>
+      <div class="legend"><span><i style="background:var(--accent)"></i>±15 cents</span><span><i style="background:var(--warn)"></i>±30</span><span><i style="background:var(--bad)"></i>más de 30</span><span>– – nota correcta</span></div>
+
+      <h3 class="section-title">Afinación</h3>
+      <div class="facts">
+        <div class="fact"><b>±${a.tuning.meanAbsCents.toFixed(1)}</b><span>cents de desviación media</span></div>
+        <div class="fact"><b>${signed(a.tuning.bias, 1)}</b><span>tendencia: ${Math.abs(a.tuning.bias) < 5 ? 'centrada' : a.tuning.bias > 0 ? 'vas alto' : 'vas bajo'}</span></div>
+        <div class="fact"><b>${a.tuning.inTunePct.toFixed(0)}%</b><span>del tiempo afinado (±25)</span></div>
+        <div class="fact"><b>${a.range.lowName}–${a.range.highName}</b><span>rango usado</span></div>
+        <div class="fact"><b>${a.vibrato.rate ? a.vibrato.rate.toFixed(1) + ' Hz' : '—'}</b><span>${a.vibrato.rate ? `vibrato ±${(a.vibrato.extent / 2).toFixed(0)} cents` : 'sin vibrato detectado'}</span></div>
+        <div class="fact"><b>${a.notes.length}</b><span>notas detectadas</span></div>
       </div>
-      <div class="card"><h3>Afinación</h3><div class="stats">
-        <div class="stat"><b>±${a.tuning.meanAbsCents.toFixed(1)}</b><span>cents de desviación media</span></div>
-        <div class="stat"><b>${signed(a.tuning.bias, 1)}</b><span>tendencia (${a.tuning.bias > 0 ? 'alto' : 'bajo'})</span></div>
-        <div class="stat"><b>${a.tuning.inTunePct.toFixed(0)}%</b><span>del tiempo afinado (±25)</span></div>
-        <div class="stat"><b>${a.range.lowName}–${a.range.highName}</b><span>rango usado</span></div>
-        <div class="stat"><b>${a.vibrato.rate ? a.vibrato.rate.toFixed(1) + ' Hz' : '—'}</b><span>vibrato${a.vibrato.rate ? ` (±${(a.vibrato.extent / 2).toFixed(0)} c, ${Math.round(a.vibrato.ratio * 100)}% notas largas)` : ''}</span></div>
-        <div class="stat"><b>${a.notes.length}</b><span>notas detectadas</span></div>
-      </div></div>
-      <div class="card"><h3>Tono de voz</h3>
-        <div class="subscores">${pct('Brillo', a.tone.brightness)}${pct('Aire en la voz', a.tone.breathiness)}${pct('Rango dinámico', a.tone.dynamics)}</div>
-        <div class="chips">${a.tone.labels.map((l) => `<span class="chip">${l}</span>`).join('')}</div>
+
+      <h3 class="section-title">Tono de voz</h3>
+      <div class="meters">${meter('Brillo', a.tone.brightness, 'Oscuro', 'Brillante')}${meter('Aire en la voz', a.tone.breathiness, 'Limpio', 'Aireado')}${meter('Rango dinámico', a.tone.dynamics, 'Plano', 'Amplio')}</div>
+      <div class="chips">${a.tone.labels.map((l) => `<span class="chip">${l}</span>`).join('')}</div>
+
+      <h3 class="section-title">Emoción transmitida</h3>
+      <div class="emotion">${circumplexSvg(e.valence, e.arousal)}
+        <div><div class="emotion-name"><span class="emotion-emoji" aria-hidden="true">${e.emoji}</span>${e.label}</div>
+        <div class="emotion-sub">Energía ${signed(e.arousal * 100)} · Valencia ${signed(e.valence * 100)}</div>
+        ${e.target ? `<div class="emotion-match">Buscabas ${e.target.label.toLowerCase()}: <span class="${scoreCls(e.match)}">${e.match}%</span></div>` : ''}</div>
       </div>
-      <div class="card"><h3>Emoción transmitida</h3>
-        <div class="emotion">${circumplexSvg(e.valence, e.arousal)}
-          <div><div class="emoji">${e.emoji}</div><b>${e.label}</b>
-          <div class="muted small">Energía ${signed(e.arousal * 100)} · Valencia ${signed(e.valence * 100)}</div>
-          ${e.target ? `<div style="margin-top:6px">Buscabas ${e.target.emoji} ${e.target.label}: <b>${e.match}%</b> de coincidencia</div>` : ''}</div>
-        </div>
-        <p class="muted small">Estimación a partir de volumen, timbre, ritmo, contorno melódico y escala.</p>
-      </div>
-      <div class="card"><h3>Consejos</h3><ul class="tips">${a.tips.map((t) => `<li>${esc(t)}</li>`).join('') || '<li>¡Buen trabajo!</li>'}</ul></div>
-      <button id="delTake" class="btn danger block">Eliminar toma</button>`;
+      <p class="fineprint">Estimación a partir de volumen, timbre, ritmo, contorno melódico y escala.</p>
+
+      <h3 class="section-title">Consejos</h3>
+      <ul class="tips">${a.tips.map((t) => `<li>${esc(t)}</li>`).join('') || '<li>¡Buen trabajo!</li>'}</ul>
+      <div class="btn-row"><button id="delTake" class="btn btn-dark danger">Eliminar toma</button></div>`;
   }
 
   $('#delTake').onclick = async () => {
@@ -400,12 +434,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 $('#exStart').onclick = async () => {
   if (exercise) { exercise.cancel = true; return; }
   if (!(await startMic())) return;
-  const type = $('#exType').value;
+  const type = exType();
   const def = EXERCISES[type];
   const root = settings.exRoot;
   const targets = def.seq ? def.seq.map((s) => root + s) : [root + Math.floor(Math.random() * 13)];
   const ex = (exercise = { type, targets, dur: def.dur, lanes: [], phase: 'listen', center: root + 4 });
-  $('#exStart').textContent = 'Cancelar';
+  $('#exStart').classList.add('stop');
+  $('#exStart').setAttribute('aria-label', 'Cancelar ejercicio');
   $('#exResult').innerHTML = '';
   const status = $('#exStatus'), tgt = $('#exTarget');
   try {
@@ -447,7 +482,8 @@ $('#exStart').onclick = async () => {
     status.textContent = 'Cancelado';
   } finally {
     exercise = null;
-    $('#exStart').textContent = 'Empezar';
+    $('#exStart').classList.remove('stop');
+    $('#exStart').setAttribute('aria-label', 'Empezar ejercicio');
     renderTrainLog();
   }
 };
@@ -473,24 +509,24 @@ function drawExerciseRoll() {
 
 function showExerciseResult(res, targets) {
   const verdict = res.score >= 85 ? '¡Excelente!' : res.score >= 65 ? 'Bien, sigue practicando' : 'A seguir entrenando';
-  let html = `<div class="score-head">${ringSvg(res.score)}<div><b>${verdict}</b>`;
-  if (res.meanAbsCents != null) html += `<div class="muted">Desviación media ±${res.meanAbsCents.toFixed(0)} cents</div>`;
-  if (res.bias != null) html += `<div class="muted">Tendencia ${signed(res.bias)} cents${res.reachTime != null ? ` · llegaste a la nota en ${res.reachTime.toFixed(2)} s` : ''}</div>`;
-  html += '</div></div>';
+  let html = `<div class="ex-result"><div class="num ${scoreCls(res.score)}">${res.score}</div><div><b>${verdict}</b>`;
+  if (res.meanAbsCents != null) html += `<span class="muted">Desviación media ±${res.meanAbsCents.toFixed(0)} cents</span>`;
+  if (res.bias != null) html += `<span class="muted">Tendencia ${signed(res.bias)} cents${res.reachTime != null ? ` · llegaste a la nota en ${res.reachTime.toFixed(2)} s` : ''}</span>`;
   if (res.perNote) {
-    html += '<div class="pill-row">' + res.perNote.map((p) => `<span class="pill ${p.ok ? 'ok' : 'bad'}">${nn(p.target, false)} ${p.cents == null ? '—' : signed(p.cents)}</span>`).join('') + '</div>';
+    html += '<div class="notes-row">' + res.perNote.map((p) => `<span class="note-chip ${p.ok ? 'ok' : 'bad'}">${nn(p.target, false)} ${p.cents == null ? '—' : signed(p.cents)}</span>`).join('') + '</div>';
   }
-  $('#exResult').innerHTML = html;
+  $('#exResult').innerHTML = html + '</div></div>';
 }
 
 async function renderTrainLog() {
   const log = (await db.all('training')).sort((a, b) => b.date - a.date).slice(0, 15);
   $('#exLog').innerHTML = log.length
-    ? log.map((l) => `<div class="card take-item"><div class="info"><b>${esc(l.name)}</b> <span class="muted small">· ${nn(l.root)} · ${fmtDate(l.date)}</span>
-        ${l.meanAbsCents != null ? `<div class="muted small">±${l.meanAbsCents.toFixed(0)} cents</div>` : ''}</div><div class="badge">${l.score}</div></div>`).join('')
-    : emptyMsg('Todavía no has hecho ejercicios.');
+    ? log.map((l) => `<div class="row-item"><span class="row-text"><span class="row-title">${esc(l.name)} · ${nn(l.root)}</span>
+        <span class="row-sub">${fmtDate(l.date)}${l.meanAbsCents != null ? ` · ±${l.meanAbsCents.toFixed(0)} cents` : ''}</span></span>
+        <span class="row-score ${scoreCls(l.score)}">${l.score}</span></div>`).join('')
+    : emptyMsg('Aún no hay ejercicios', 'Elige uno arriba, pulsa el botón y repite lo que escuches.');
   if (!exercise) {
-    const type = $('#exType').value, def = EXERCISES[type];
+    const type = exType(), def = EXERCISES[type];
     const targets = (def.seq || [0]).map((s) => settings.exRoot + s);
     drawRoll($('#exRoll'), {
       points: [], lanes: targets.map((m, i) => ({ start: i * def.dur, end: (i + 1) * def.dur, midi: m })),
@@ -498,7 +534,8 @@ async function renderTrainLog() {
     });
   }
 }
-$('#exType').onchange = renderTrainLog;
+const exType = () => document.querySelector('input[name=exType]:checked').value;
+document.querySelectorAll('input[name=exType]').forEach((r) => (r.onchange = () => { if (!exercise) $('#exResult').innerHTML = ''; renderTrainLog(); }));
 $('#exRoot').addEventListener('change', renderTrainLog);
 
 // ---------- Progreso ----------
@@ -520,14 +557,14 @@ async function renderProgress() {
   let delta = '';
   if (thisW != null && prevW != null) {
     const dv = thisW - prevW;
-    delta = ` <small class="${dv <= 0 ? 'up' : 'down'}">${dv <= 0 ? '▼' : '▲'} ${Math.abs(dv).toFixed(1)}</small>`;
+    delta = `<span class="delta ${dv <= 0 ? 'up' : 'down'}">${dv <= 0 ? 'mejor' : 'peor'} ${Math.abs(dv).toFixed(1)}</span>`;
   }
   $('#progTiles').innerHTML = `
-    <div class="tile"><b>${takes.length}</b><span>tomas grabadas</span></div>
-    <div class="tile"><b>${minutes < 10 ? minutes.toFixed(1) : minutes.toFixed(0)}</b><span>minutos cantados</span></div>
-    <div class="tile"><b>${streak} 🔥</b><span>días seguidos</span></div>
-    <div class="tile"><b>${thisW != null ? '±' + thisW.toFixed(1) : '—'}${delta}</b><span>cents medios esta semana</span></div>
-    <div class="tile" style="grid-column:1/-1"><b>${lows.length ? `${nn(Math.min(...lows))} – ${nn(Math.max(...highs))}` : '—'}</b><span>rango vocal registrado</span></div>`;
+    <div class="stat-tile"><b>${streak}</b><span>${streak === 1 ? 'día seguido' : 'días seguidos'} practicando</span></div>
+    <div class="stat-tile"><b>${minutes < 10 ? minutes.toFixed(1) : minutes.toFixed(0)}</b><span>minutos cantados</span></div>
+    <div class="stat-tile"><b>${takes.length}</b><span>tomas grabadas</span></div>
+    <div class="stat-tile"><b>${thisW != null ? '±' + thisW.toFixed(1) : '—'}${delta}</b><span>cents medios esta semana</span></div>
+    <div class="stat-tile wide"><b>${lows.length ? `${nn(Math.min(...lows))} – ${nn(Math.max(...highs))}` : '—'}</b><span>rango vocal registrado</span></div>`;
   const scoreSeries = takes.map((t) => ({ x: t.date, y: t.summary.score }));
   drawChart($('#progScore'), scoreSeries, { yMin: 0, yMax: 100 });
   drawChart($('#progCents'), takes.map((t) => ({ x: t.date, y: t.summary.meanAbsCents })), { yMin: 0, color: getComputedStyle(document.documentElement).getPropertyValue('--curve').trim() });
@@ -535,10 +572,11 @@ async function renderProgress() {
     const ts = takes.filter((t) => t.songId === s.id);
     if (!ts.length) return null;
     const first = ts[0].summary.score, last = ts[ts.length - 1].summary.score, dlt = last - first;
-    return `<div class="song-prog"><span>${esc(s.title)} <span class="muted small">(${ts.length})</span></span>
-      <span>${first} → <b>${last}</b> ${ts.length > 1 ? `<span class="${dlt >= 0 ? 'up' : 'down'}">${signed(dlt)}</span>` : ''}</span></div>`;
+    return `<div class="row-item">${coverHtml(s)}<span class="row-text"><span class="row-title">${esc(s.title)}</span>
+      <span class="row-sub">${ts.length} toma${ts.length === 1 ? '' : 's'} · empezaste en ${first}</span></span>
+      <span class="row-score">${last}${ts.length > 1 ? `<small class="${dlt >= 0 ? 'up' : 'down'}">${signed(dlt)}</small>` : ''}</span></div>`;
   }).filter(Boolean);
-  $('#progSongs').innerHTML = rows.join('') || '<div class="muted">Graba tomas de tus canciones para ver tu mejora.</div>';
+  $('#progSongs').innerHTML = rows.join('') || emptyMsg('Sin datos todavía', 'Graba tomas de tus canciones para ver cómo mejoras.');
 }
 
 // ---------- Ajustes ----------

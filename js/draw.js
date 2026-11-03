@@ -49,7 +49,7 @@ export function drawRoll(canvas, o) {
 
   ctx.fillStyle = cssVar('--roll-bg');
   ctx.fillRect(0, 0, w, h);
-  ctx.font = `${Math.min(11, Math.max(8, rowH * 0.7))}px system-ui, sans-serif`;
+  ctx.font = `600 ${Math.min(11, Math.max(8, rowH * 0.7))}px Figtree, system-ui, sans-serif`;
   ctx.textBaseline = 'middle';
   for (let m = lo; m <= hi; m++) {
     const pc = (((m - keyPc) % 12) + 12) % 12;
@@ -117,7 +117,7 @@ export function drawRoll(canvas, o) {
 /** Gráfica de línea simple. series = [{x:number(ms), y}] */
 export function drawChart(canvas, series, { yMin, yMax, color, fmt = (v) => v.toFixed(0), empty = 'Sin datos todavía' } = {}) {
   const { ctx, w, h } = setupCanvas(canvas);
-  ctx.font = '11px system-ui, sans-serif';
+  ctx.font = '600 11px Figtree, system-ui, sans-serif';
   if (series.length === 0) {
     ctx.fillStyle = cssVar('--muted');
     ctx.textAlign = 'center';
@@ -149,14 +149,6 @@ export function drawChart(canvas, series, { yMin, yMax, color, fmt = (v) => v.to
   ctx.stroke();
   ctx.fillStyle = c;
   series.forEach((p, i) => { ctx.beginPath(); ctx.arc(X(i), Y(p.y), 3, 0, Math.PI * 2); ctx.fill(); });
-}
-
-export function ringSvg(score) {
-  const r = 42, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, score));
-  const col = v >= 80 ? 'var(--accent)' : v >= 55 ? 'var(--warn)' : 'var(--bad)';
-  return `<svg class="ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--roll-row)" stroke-width="9"/>
-  <circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(c * v) / 100} ${c}" transform="rotate(-90 50 50)"/>
-  <text x="50" y="50" text-anchor="middle" dominant-baseline="central" font-size="28" font-weight="800" fill="var(--text)">${Math.round(v)}</text></svg>`;
 }
 
 /** Mapa valencia × activación. */

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-03T04:00:00Z",
+  "title": "Design System: AfinaVoz",
+  "extensions": {
+    "colorMeta": {
+      "bg": { "role": "neutral", "displayName": "Fondo" },
+      "surface": { "role": "neutral", "displayName": "Superficie" },
+      "text": { "role": "primary", "displayName": "Blanco" },
+      "in-tune": { "role": "tertiary", "displayName": "Afinado (menta)" },
+      "rec": { "role": "secondary", "displayName": "Grabar" }
+    },
+    "typographyMeta": {
+      "tuner-note": { "displayName": "Nota", "purpose": "Lectura principal del afinador y de ejercicios." }
+    },
+    "shadows": [
+      { "name": "cover", "value": "0 4px 14px rgba(0,0,0,.35)", "purpose": "Portadas de canción." },
+      { "name": "round-button", "value": "0 6px 18px rgba(0,0,0,.45)", "purpose": "Botones redondos de grabar y empezar." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Entrada de vistas, hoja inferior y cambios de estado." }
+    ],
+    "breakpoints": [{ "name": "column", "value": "640px" }]
+  },
+  "components": [
+    { "name": "Botón principal", "kind": "button", "refersTo": "button-light", "description": "Acción principal de la pantalla.",
+      "html": "<button class=\"ds-btn-light\">Nueva canción</button>",
+      "css": ".ds-btn-light{background:#f4f4f5;color:#0e0e10;height:44px;padding:0 20px;border:0;border-radius:999px;font:700 15px Figtree,system-ui,sans-serif;cursor:pointer;transition:transform .15s}.ds-btn-light:active{transform:scale(.97)}.ds-btn-light:focus-visible{outline:2px solid #f4f4f5;outline-offset:2px}" },
+    { "name": "Botón secundario", "kind": "button", "refersTo": "button-dark", "description": "Acciones secundarias y destructivas (texto rojo).",
+      "html": "<button class=\"ds-btn-dark\">Exportar copia</button>",
+      "css": ".ds-btn-dark{background:#222226;color:#f4f4f5;height:44px;padding:0 20px;border:0;border-radius:999px;font:700 15px Figtree,system-ui,sans-serif;cursor:pointer}.ds-btn-dark:hover{background:#2e2e33}.ds-btn-dark:focus-visible{outline:2px solid #f4f4f5;outline-offset:2px}" },
+    { "name": "Grabar", "kind": "custom", "refersTo": "record-button", "description": "Grabar una toma; el punto pasa a cuadrado mientras graba.",
+      "html": "<button class=\"ds-rec\" aria-label=\"Grabar\"><span></span></button>",
+      "css": ".ds-rec{width:60px;height:60px;border-radius:50%;border:0;background:#ff3b5c;display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.45);cursor:pointer}.ds-rec span{width:20px;height:20px;border-radius:50%;background:#fff}.ds-rec:focus-visible{outline:2px solid #f4f4f5;outline-offset:2px}" },
+    { "name": "Selector píldora", "kind": "input", "refersTo": "pill-select", "description": "Selector con etiqueta encima del valor.",
+      "html": "<label class=\"ds-select\"><span>Tonalidad</span><select><option>Do</option><option>Re</option></select></label>",
+      "css": ".ds-select{display:inline-flex;flex-direction:column;justify-content:center;height:52px;padding:0 36px 0 16px;border-radius:14px;background:#18181b;font-family:Figtree,system-ui,sans-serif}.ds-select span{font-size:11.5px;font-weight:600;color:#a1a1aa}.ds-select select{appearance:none;border:0;background:transparent;color:#f4f4f5;font:700 15px Figtree,system-ui,sans-serif;padding:0}.ds-select:focus-within{outline:2px solid #f4f4f5;outline-offset:2px}" },
+    { "name": "Chip de ejercicio", "kind": "chip", "refersTo": "chip-selected", "description": "Opción de un grupo; la seleccionada se invierte.",
+      "html": "<span class=\"ds-chip\">Nota al azar</span><span class=\"ds-chip ds-chip-on\">Escala mayor</span>",
+      "css": ".ds-chip{display:inline-block;margin-right:8px;padding:8px 14px;border-radius:999px;background:#222226;color:#f4f4f5;font:600 14px Figtree,system-ui,sans-serif}.ds-chip-on{background:#f4f4f5;color:#0e0e10}" },
+    { "name": "Fila de canción", "kind": "card", "refersTo": "fact-tile", "description": "Portada con color propio, título, metadatos y última puntuación.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-cover\">BM</span><span class=\"ds-txt\"><b>Bésame mucho</b><small>3 tomas · mejor 82</small></span><span class=\"ds-score\">78</span></div>",
+      "css": ".ds-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;font-family:Figtree,system-ui,sans-serif;color:#f4f4f5}.ds-row:hover{background:#18181b}.ds-cover{width:52px;height:52px;border-radius:6px;display:grid;place-items:center;font-weight:900;font-size:18px;color:#fff;background:linear-gradient(140deg,hsl(190 70% 58%),hsl(225 60% 30%))}.ds-txt{flex:1;display:flex;flex-direction:column}.ds-txt small{color:#a1a1aa;font-size:13.5px}.ds-score{font-weight:800;font-size:20px;color:#fbbf4a}" },
+    { "name": "Barra de pestañas", "kind": "nav", "refersTo": "button-dark", "description": "Navegación inferior con iconos SVG lineales.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"on\"><svg viewBox=\"0 0 24 24\"><path d=\"M4.5 16.5a8 8 0 1 1 15 0\"/><path d=\"m12 13 3.5-4.5\"/></svg>Afinador</a><a><svg viewBox=\"0 0 24 24\"><path d=\"M9 18V5.5l11-2V16\"/><circle cx=\"6.5\" cy=\"18\" r=\"2.5\"/><circle cx=\"17.5\" cy=\"16\" r=\"2.5\"/></svg>Canciones</a></nav>",
+      "css": ".ds-tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#0e0e10;padding:6px 4px;font:600 11.5px Figtree,system-ui,sans-serif}.ds-tabs a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#a1a1aa;padding:10px 0 4px}.ds-tabs a.on{color:#f4f4f5}.ds-tabs svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-tabs a.on svg{stroke-width:2.4}" }
+  ],
+  "narrative": {
+    "northStar": "El contenido pone el color",
+    "overview": "Canon de app de música con el acabado de Spotify como referente: interfaz negra, tipográfica y callada; el color lo ponen cada canción y el estado de afinación.",
+    "keyCharacteristics": ["Nota gigante legible a distancia", "Color propio por canción", "Jerarquía por luminosidad, sin bordes", "Figtree 400–900 alojada en la app"],
+    "rules": [
+      { "name": "El contenido pone el color", "body": "Cada canción deriva su tono del título; no hay color de marca decorativo.", "section": "colors" },
+      { "name": "El estado nunca va solo en color", "body": "Afinado/alto/bajo lleva siempre texto y posición.", "section": "colors" }
+    ],
+    "dos": ["Dar a la nota y a la puntuación el tamaño máximo", "Usar iconos del sprite SVG"],
+    "donts": ["Usar el verde o el logotipo de Spotify", "Bordes o sombras de color en superficies", "Emojis como iconos de interfaz"]
+  }
+}
