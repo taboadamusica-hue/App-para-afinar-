@@ -120,3 +120,29 @@ export function nearestScaleMidi(midi, keyPc = 0, scale = 'chromatic') {
 }
 
 export const centsOff = (midi, target) => (midi - target) * 100;
+
+// Tesituras (MIDI). range = extensión habitual; comfort = zona cómoda donde conviene trabajar.
+// Valores orientativos de la clasificación vocal clásica; cada voz es distinta.
+export const VOICE_TYPES = [
+  { id: 'bajo', name: 'Bajo', range: [40, 64], comfort: [43, 60] },              // Mi2–Mi4 · Sol2–Do4
+  { id: 'bajoBaritono', name: 'Bajo-barítono', range: [41, 65], comfort: [45, 62] }, // Fa2–Fa4 · La2–Re4
+  { id: 'baritono', name: 'Barítono', range: [45, 69], comfort: [47, 64] },      // La2–La4 · Si2–Mi4
+  { id: 'tenor', name: 'Tenor', range: [48, 72], comfort: [52, 69] },            // Do3–Do5 · Mi3–La4
+  { id: 'contratenor', name: 'Contratenor', range: [55, 76], comfort: [59, 72] }, // Sol3–Mi5 · Si3–Do5
+  { id: 'contralto', name: 'Contralto', range: [53, 77], comfort: [57, 72] },    // Fa3–Fa5 · La3–Do5
+  { id: 'mezzo', name: 'Mezzosoprano', range: [57, 81], comfort: [60, 76] },     // La3–La5 · Do4–Mi5
+  { id: 'soprano', name: 'Soprano', range: [60, 84], comfort: [64, 79] },        // Do4–Do6 · Mi4–Sol5
+];
+export const voiceType = (id) => VOICE_TYPES.find((v) => v.id === id) || null;
+
+/**
+ * Tesituras ordenadas de más a menos parecida a un rango cómodo cantado [lo, hi] (MIDI).
+ * Compara con la zona cómoda y penaliza las notas que quedan fuera de la extensión.
+ */
+export function suggestVoiceTypes(lo, hi) {
+  return VOICE_TYPES.map((v) => {
+    const [c0, c1] = v.comfort, [r0, r1] = v.range;
+    const dist = Math.abs(lo - c0) + Math.abs(hi - c1) + 2 * (Math.max(0, r0 - lo) + Math.max(0, hi - r1));
+    return { ...v, dist };
+  }).sort((a, b) => a.dist - b.dist);
+}

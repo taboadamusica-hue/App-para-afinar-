@@ -257,6 +257,7 @@ select option { background: var(--surface-2); color: var(--text); }
 .seg input:checked + span { background: var(--text); color: var(--bg); }
 .seg input:focus-visible + span { outline: 2px solid var(--text); outline-offset: 2px; }
 .ex-stage { text-align: center; padding: 28px 0 0; }
+.ex-note.idle { color: var(--surface-3); }
 .ex-note { font-size: 80px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
 .ex-status { color: var(--muted); font-weight: 600; margin-top: 8px; min-height: 22px; }
 .ex-controls { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
@@ -391,3 +392,48 @@ dialog h3 { font-size: 22px; font-weight: 900; }
 .spec-controls { margin-top: 16px; }
 .spec-controls .pill-select { width: 100%; }
 .btn.toggle[aria-pressed="true"], #spFreeze[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+/* ---------- Tesitura ---------- */
+.voice-card {
+  display: block; width: 100%; margin-top: 10px; padding: 14px 16px; border: 0; border-radius: 14px;
+  background: var(--surface); text-align: left; cursor: pointer;
+}
+.voice-card-top { margin: 4px 0 4px; }
+.voice-card:active { background: var(--surface-2); }
+.vc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.vc-label { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.vc-name { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+.vc-change { font-size: 13px; font-weight: 700; color: var(--muted); }
+.vc-text { font-size: 13.5px; color: var(--muted); font-weight: 500; margin-top: 4px; line-height: 1.4; }
+.vc-text b { color: var(--text); font-weight: 700; }
+.vc-empty .vc-name { color: var(--accent); }
+.range-bar { position: relative; height: 8px; border-radius: 999px; background: var(--surface-2); margin-top: 12px; }
+.range-bar .rb-range, .range-bar .rb-comfort { position: absolute; top: 0; bottom: 0; border-radius: 999px; }
+.range-bar .rb-range { background: color-mix(in srgb, var(--warn) 55%, transparent); }
+.range-bar .rb-comfort { background: var(--accent); }
+.range-bar .rb-mark { position: absolute; top: -3px; width: 3px; height: 14px; margin-left: -1.5px; border-radius: 2px; background: var(--text); }
+.range-ticks { position: relative; height: 16px; margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--dim); }
+.range-ticks span { position: absolute; transform: translateX(-50%); }
+.t-ok { color: var(--accent); } .t-warn { color: var(--warn); }
+
+.sheet-intro { margin: -4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+dialog.sheet { max-height: 92vh; overflow-y: auto; }
+.voice-list { display: grid; gap: 2px; margin: 0 -8px; }
+.voice-opt { display: flex; align-items: center; gap: 12px; padding: 10px 8px; border-radius: 10px; cursor: pointer; }
+.voice-opt input { appearance: none; -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--surface-3); margin: 0; flex: none; display: grid; place-items: center; cursor: pointer; }
+.voice-opt input:checked { border-color: var(--accent); }
+.voice-opt input:checked::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.voice-opt input:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.voice-opt:has(input:checked) { background: var(--surface-2); }
+.vo-text { flex: 1; min-width: 0; }
+.vo-name { font-weight: 700; font-size: 16px; color: var(--text); }
+.vo-range { font-size: 13px; color: var(--muted); font-weight: 500; }
+.vo-badge { font-size: 11.5px; font-weight: 700; color: var(--bg); background: var(--accent); border-radius: 999px; padding: 3px 8px; flex: none; }
+
+.voice-test { background: var(--surface-2); border-radius: 12px; padding: 16px; text-align: center; }
+.vt-step { font-weight: 700; font-size: 15px; line-height: 1.4; }
+.vt-note { font-size: 56px; font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-top: 8px; }
+.vt-bar { margin-top: 10px; height: 4px; background: var(--surface-3); }
+.vt-bar i { background: var(--accent); width: 0; transition: width .1s linear; }
+.vt-result { margin-top: 10px; font-size: 14px; color: var(--muted); font-weight: 500; }
+.vt-result b { color: var(--text); }

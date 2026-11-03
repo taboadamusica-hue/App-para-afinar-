@@ -64,6 +64,19 @@ export function drawRoll(canvas, o) {
     }
   }
 
+  // Franja de tesitura en el margen: verde = zona cómoda, ámbar = extensión
+  if (o.band) {
+    for (let m = lo; m <= hi; m++) {
+      const inComfort = m >= o.band.comfort[0] && m <= o.band.comfort[1];
+      const inRange = m >= o.band.range[0] && m <= o.band.range[1];
+      if (!inRange) continue;
+      ctx.fillStyle = inComfort ? cssVar('--accent') : cssVar('--warn');
+      ctx.globalAlpha = inComfort ? 0.9 : 0.6;
+      ctx.fillRect(gutter - 4, y(m) - rowH / 2 + 0.5, 3, rowH - 1);
+    }
+    ctx.globalAlpha = 1;
+  }
+
   // Carriles objetivo (ejercicios)
   for (const l of o.lanes || []) {
     if (l.end < t0 || l.start > t1) continue;

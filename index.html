@@ -67,6 +67,7 @@
         <label class="pill-select"><span>Tonalidad</span><select id="tKey"></select></label>
         <label class="pill-select"><span>Escala</span><select id="tScale"></select></label>
       </div>
+      <button class="voice-card" data-voice-card aria-haspopup="dialog"></button>
     </section>
 
     <!-- GUITARRA -->
@@ -143,6 +144,7 @@
 
     <!-- ENTRENAR -->
     <section id="view-train" class="view" aria-label="Entrenar">
+      <button class="voice-card voice-card-top" data-voice-card aria-haspopup="dialog"></button>
       <div class="seg" role="radiogroup" aria-label="Ejercicio" id="exTypes">
         <label><input type="radio" name="exType" value="sustain" checked /><span>Nota sostenida</span></label>
         <label><input type="radio" name="exType" value="random" /><span>Nota al azar</span></label>
@@ -213,6 +215,26 @@
       <label class="field"><span>Emoción que buscas transmitir</span><select name="targetEmotion"></select></label>
       <div class="sheet-actions">
         <button type="button" id="songDelete" class="btn btn-dark danger" hidden>Eliminar</button>
+        <span class="spacer"></span>
+        <button value="cancel" formnovalidate class="btn btn-dark">Cancelar</button>
+        <button value="ok" class="btn btn-light">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="voiceDialog" class="sheet">
+    <form method="dialog" id="voiceForm">
+      <h3>Tu tesitura</h3>
+      <p class="sheet-intro">Elige tu tipo de voz y MUSIC MAN te recomendará en qué notas trabajar: la <b class="t-ok">zona cómoda</b> para practicar a diario y la <b class="t-warn">extensión</b> para ampliar poco a poco.</p>
+      <div id="voiceTest" class="voice-test" hidden>
+        <div id="vtStep" class="vt-step"></div>
+        <div id="vtNote" class="vt-note">–</div>
+        <div class="bar vt-bar"><i id="vtProgress"></i></div>
+        <div id="vtResult" class="vt-result"></div>
+      </div>
+      <div id="voiceList" class="voice-list" role="radiogroup" aria-label="Tipo de voz"></div>
+      <button type="button" id="vtStart" class="btn btn-dark">No sé cuál es: hacer la prueba de rango</button>
+      <div class="sheet-actions">
         <span class="spacer"></span>
         <button value="cancel" formnovalidate class="btn btn-dark">Cancelar</button>
         <button value="ok" class="btn btn-light">Guardar</button>

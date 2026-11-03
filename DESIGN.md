@@ -161,6 +161,9 @@ Selectores «píldora» con etiqueta pequeña encima del valor y un chevron. Los
 ### Navigation
 Barra inferior con iconos SVG lineales propios (trazo 1.8, y 2.4 en la pestaña activa) y etiqueta. La flecha atrás aparece solo en las subpantallas.
 
+### Tarjeta de tesitura
+Superficie de 14px con el tipo de voz, el texto de recomendación (zona cómoda en menta, extensión en ámbar) y una barra de rango Do2–Mi6. En los rollos de notas, la misma codificación aparece como una franja de 3px en el margen.
+
 ### Control segmentado
 Pista de superficie con tres segmentos; el activo sube a superficie 3 con texto blanco.
 

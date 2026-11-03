@@ -69,3 +69,16 @@ test('pico del espectro con interpolación', async () => {
   const p = spectrumPeak(db, sr, 60, 5000);
   assert.ok(Math.abs(p.freq - 440) < 1, String(p.freq));
 });
+
+test('tesituras: datos coherentes y sugerencia por rango', async () => {
+  const { VOICE_TYPES, suggestVoiceTypes } = await import('../js/pitch.js');
+  for (const v of VOICE_TYPES) {
+    assert.ok(v.range[0] <= v.comfort[0] && v.comfort[1] <= v.range[1], v.id);
+    assert.ok(v.range[1] - v.range[0] >= 20, v.id);
+  }
+  assert.equal(suggestVoiceTypes(52, 69)[0].id, 'tenor');      // Mi3–La4
+  assert.equal(suggestVoiceTypes(43, 60)[0].id, 'bajo');       // Sol2–Do4
+  assert.equal(suggestVoiceTypes(64, 79)[0].id, 'soprano');    // Mi4–Sol5
+  assert.equal(suggestVoiceTypes(60, 75)[0].id, 'mezzo');      // Do4–Re#5
+  assert.equal(suggestVoiceTypes(47, 64)[0].id, 'baritono');   // Si2–Mi4
+});

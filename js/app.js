@@ -1,12 +1,12 @@
 // MUSIC MAN — interfaz principal.
-import { freqToMidi, midiToFreq, noteName, nearestScaleMidi, nearestString, NOTE_NAMES, SCALES, GUITAR_TUNINGS } from './pitch.js';
+import { freqToMidi, midiToFreq, noteName, nearestScaleMidi, nearestString, NOTE_NAMES, SCALES, GUITAR_TUNINGS, VOICE_TYPES, voiceType, suggestVoiceTypes } from './pitch.js';
 import { analyzeTake, scoreSustain, scoreSequence, EMOTION_LIST } from './analysis.js';
 import { MicEngine } from './audio.js';
 import * as db from './db.js';
 import { drawRoll, drawChart, circumplexSvg, errColor, drawSpectrum, drawSpectrogramColumn, clearSpectrogram, spectrumPeak } from './draw.js';
 
 // ---------- Ajustes ----------
-const DEFAULTS = { notation: 'latin', a4: 440, sensitivity: 5, saveAudio: true, tunerKey: 0, tunerScale: 'chromatic', exRoot: 57, guitarTuning: 'standard', spRange: 'voice', spHold: true };
+const DEFAULTS = { notation: 'latin', a4: 440, sensitivity: 5, saveAudio: true, tunerKey: 0, tunerScale: 'chromatic', exRoot: 57, guitarTuning: 'standard', spRange: 'voice', spHold: true, voiceType: null, voicePrompted: false };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('afinavoz.settings') || '{}') }; } catch { /* sin storage */ }
 const saveSettings = () => { try { localStorage.setItem('afinavoz.settings', JSON.stringify(settings)); } catch { /* */ } };
@@ -76,6 +76,7 @@ function go(v) {
   engine.setMode(v === 'guitar' ? 'guitar' : 'voice');
   window.scrollTo(0, 0);
   ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, guitar: renderGuitar })[v]?.();
+  if (GROUP[v] === 'voice' && !settings.voiceType && !settings.voicePrompted) setTimeout(openVoiceDialog, 350);
 }
 const BACK = { song: 'songs', take: 'song' };
 document.querySelectorAll('[data-go]').forEach((b) => (b.onclick = () => {
@@ -109,9 +110,16 @@ function fillScaleSelect(sel, value) {
 }
 function fillRootSelect() {
   const sel = $('#exRoot');
+  const v = voiceType(settings.voiceType);
+  // Con tesitura: notas base dentro de la extensión, marcando las de la zona cómoda
+  const [lo, hi] = v ? [v.range[0], v.range[1] - 7] : [40, 79];
   const opts = [];
-  for (let m = 40; m <= 79; m++) opts.push(`<option value="${m}">${nn(m)}</option>`);
+  for (let m = lo; m <= hi; m++) {
+    const comfy = v && m >= v.comfort[0] && m + 7 <= v.comfort[1];
+    opts.push(`<option value="${m}">${nn(m)}${comfy ? ' · zona cómoda' : ''}</option>`);
+  }
   sel.innerHTML = opts.join('');
+  if (settings.exRoot < lo || settings.exRoot > hi) settings.exRoot = v ? v.comfort[0] : 57;
   sel.value = settings.exRoot;
 }
 function refreshSelects() {
@@ -122,6 +130,127 @@ function refreshSelects() {
 $('#tKey').onchange = (e) => { settings.tunerKey = +e.target.value; saveSettings(); };
 $('#tScale').onchange = (e) => { settings.tunerScale = e.target.value; saveSettings(); };
 $('#exRoot').onchange = (e) => { settings.exRoot = +e.target.value; saveSettings(); };
+
+// ---------- Tesitura ----------
+const voiceBand = () => {
+  const v = voiceType(settings.voiceType);
+  return v ? { comfort: v.comfort, range: v.range } : null;
+};
+const RB_LO = 36, RB_HI = 88; // Do2–Mi6 en la barra de rango
+const rbPct = (m) => ((m - RB_LO) / (RB_HI - RB_LO)) * 100;
+
+function renderVoiceCards() {
+  const v = voiceType(settings.voiceType);
+  document.querySelectorAll('[data-voice-card]').forEach((el) => {
+    el.classList.toggle('vc-empty', !v);
+    if (!v) {
+      el.innerHTML = `<div class="vc-head"><span class="vc-name">Elige tu tesitura</span><span class="vc-change">Elegir</span></div>
+        <div class="vc-text">Bajo, barítono, tenor, contralto, soprano… y te recomendaremos en qué notas trabajar.</div>`;
+      return;
+    }
+    const ticks = [36, 48, 60, 72, 84].map((m) => `<span style="left:${rbPct(m)}%">${nn(m)}</span>`).join('');
+    el.innerHTML = `<div class="vc-head"><span><span class="vc-label">Tesitura</span><br><span class="vc-name">${v.name}</span></span><span class="vc-change">Cambiar</span></div>
+      <div class="vc-text">Trabaja a diario en <b class="t-ok">${nn(v.comfort[0])}–${nn(v.comfort[1])}</b>. Tu extensión llega a <b class="t-warn">${nn(v.range[0])}–${nn(v.range[1])}</b>: acércate a los extremos poco a poco.</div>
+      <div class="range-bar" aria-hidden="true">
+        <span class="rb-range" style="left:${rbPct(v.range[0])}%;width:${rbPct(v.range[1]) - rbPct(v.range[0])}%"></span>
+        <span class="rb-comfort" style="left:${rbPct(v.comfort[0])}%;width:${rbPct(v.comfort[1]) - rbPct(v.comfort[0])}%"></span>
+      </div>
+      <div class="range-ticks" aria-hidden="true">${ticks}</div>`;
+  });
+  setVoiceAria(v);
+}
+function setVoiceAria(v) {
+  document.querySelectorAll('[data-voice-card]').forEach((el) => el.setAttribute('aria-label', v ? `Tesitura: ${v.name}. Cambiar` : 'Elegir tesitura'));
+}
+document.querySelectorAll('[data-voice-card]').forEach((el) => (el.onclick = () => openVoiceDialog()));
+
+let rangeTest = null;
+function fillVoiceList(selected, suggested = null) {
+  $('#voiceList').innerHTML = VOICE_TYPES.map((v) => `<label class="voice-opt">
+      <input type="radio" name="voiceType" value="${v.id}" ${v.id === selected ? 'checked' : ''} />
+      <span class="vo-text"><span class="vo-name">${v.name}</span><br><span class="vo-range">Cómoda ${nn(v.comfort[0])}–${nn(v.comfort[1])} · extensión ${nn(v.range[0])}–${nn(v.range[1])}</span></span>
+      ${v.id === suggested ? '<span class="vo-badge">Recomendada</span>' : ''}</label>`).join('');
+}
+
+function openVoiceDialog() {
+  settings.voicePrompted = true;
+  saveSettings();
+  fillVoiceList(settings.voiceType);
+  $('#voiceTest').hidden = true;
+  $('#vtStart').hidden = false;
+  const dlg = $('#voiceDialog');
+  dlg.returnValue = '';
+  dlg.onclose = () => {
+    if (rangeTest) rangeTest.cancel = true;
+    if (dlg.returnValue !== 'ok') return;
+    const picked = document.querySelector('input[name=voiceType]:checked');
+    if (!picked) return;
+    const changed = picked.value !== settings.voiceType;
+    settings.voiceType = picked.value;
+    if (changed) settings.exRoot = voiceType(picked.value).comfort[0];
+    saveSettings();
+    renderVoiceCards();
+    fillRootSelect();
+    if (view === 'train') renderTrainLog();
+    toast(`Tesitura: ${voiceType(picked.value).name}`);
+  };
+  dlg.showModal();
+}
+
+/** Prueba de rango: nota grave cómoda y nota aguda cómoda, 5 s cada una. */
+$('#vtStart').onclick = async () => {
+  if (rangeTest) return;
+  if (!(await startMic())) return;
+  engine.setMode('voice');
+  const test = (rangeTest = { cancel: false });
+  $('#voiceTest').hidden = false;
+  $('#vtStart').hidden = true;
+  $('#vtResult').textContent = '';
+  const steps = [
+    { text: 'Canta tu nota más <b>grave</b> que te salga cómoda, sin forzar, y mantenla.', pick: 20 },
+    { text: 'Ahora tu nota más <b>aguda</b> cómoda, sin forzar, y mantenla.', pick: 80 },
+  ];
+  const results = [];
+  try {
+    for (const st of steps) {
+      $('#vtStep').innerHTML = st.text;
+      const vals = [];
+      const t0 = performance.now();
+      while (performance.now() - t0 < 5000) {
+        if (test.cancel) throw 0;
+        const tr = live.track;
+        if (tr && tr.voiced && !tr.held) vals.push(tr.steady);
+        $('#vtNote').textContent = tr && tr.voiced ? nn(tr.note) : '–';
+        $('#vtProgress').style.width = ((performance.now() - t0) / 50) + '%';
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+      if (vals.length < 40) {
+        $('#vtStep').textContent = 'No te he oído bien. Acércate al micro y vuelve a intentarlo.';
+        $('#vtNote').textContent = '–';
+        $('#vtStart').hidden = false;
+        $('#vtStart').textContent = 'Repetir la prueba de rango';
+        return;
+      }
+      vals.sort((x, y) => x - y);
+      results.push(Math.round(vals[Math.floor((st.pick / 100) * (vals.length - 1))]));
+    }
+    let [lo, hi] = results;
+    if (lo > hi) [lo, hi] = [hi, lo];
+    const ranked = suggestVoiceTypes(lo, hi);
+    const best = ranked[0], second = ranked[1];
+    fillVoiceList(best.id, best.id);
+    $('#vtStep').textContent = 'Listo';
+    $('#vtNote').textContent = `${nn(lo)}–${nn(hi)}`;
+    $('#vtProgress').style.width = '100%';
+    $('#vtResult').innerHTML = `Tu rango cómodo es <b>${nn(lo)}–${nn(hi)}</b>. Te recomendamos <b>${best.name}</b>${second.dist - best.dist < 3 ? ` (o ${second.name})` : ''}. Pulsa Guardar o elige otra.`;
+    $('#vtStart').hidden = false;
+    $('#vtStart').textContent = 'Repetir la prueba de rango';
+  } catch (e) {
+    if (e !== 0) console.error(e);
+  } finally {
+    rangeTest = null;
+  }
+};
 
 // ---------- Lectura en vivo ----------
 // El motor entrega ~83 lecturas/s ya suavizadas (js/tracker.js); aquí solo se guardan
@@ -272,7 +401,7 @@ function frameLoop() {
       drawRoll($('#tRoll'), {
         points: live.points, t0: now - 6, t1: now,
         lo: live.center - 7, hi: live.center + 7,
-        keyPc: settings.tunerKey, scale: settings.tunerScale, notation: settings.notation,
+        keyPc: settings.tunerKey, scale: settings.tunerScale, notation: settings.notation, band: voiceBand(),
       });
     } else if (view === 'guitar') paintGuitarTuner();
     else if (view === 'spectrum') paintSpectrum();
@@ -382,7 +511,9 @@ let recording = null;
 function resetRecordingRoll() {
   $('#sTimer').textContent = '0:00';
   $('#sNow').textContent = 'Listo para grabar';
-  drawRoll($('#sRoll'), { points: [], t0: 0, t1: 8, lo: 55, hi: 72, keyPc: currentSong.keyPc, scale: currentSong.scale, notation: settings.notation });
+  const v = voiceType(settings.voiceType);
+  const c = v ? (v.comfort[0] + v.comfort[1]) / 2 : 63;
+  drawRoll($('#sRoll'), { points: [], t0: 0, t1: 8, lo: c - 8, hi: c + 8, keyPc: currentSong.keyPc, scale: currentSong.scale, notation: settings.notation, band: voiceBand() });
 }
 
 $('#sRec').onclick = async () => {
@@ -409,7 +540,7 @@ function drawRecordingRoll() {
   drawRoll($('#sRoll'), {
     points: pts, t0: Math.max(0, now - 8), t1: Math.max(8, now),
     lo: recording.center - 8, hi: recording.center + 8,
-    keyPc: currentSong.keyPc, scale: currentSong.scale, notation: settings.notation,
+    keyPc: currentSong.keyPc, scale: currentSong.scale, notation: settings.notation, band: voiceBand(),
   });
 }
 
@@ -457,6 +588,8 @@ async function renderTake() {
   const sub = (label, v) => `<div class="sub"><b>${Math.round(v)}</b><span>${label}</span><div class="bar"><i style="width:${Math.max(0, Math.min(100, v))}%"></i></div></div>`;
   const meter = (label, v, lo, hi) => `<div class="meter-row"><div class="bar-label"><span>${label}</span><span class="muted">${v < 0.33 ? lo : v > 0.66 ? hi : 'Medio'}</span></div><div class="bar"><i style="width:${Math.max(3, v * 100)}%"></i></div></div>`;
   const hue = songHue(song);
+  const tess = tessituraCheck(a);
+  if (tess && tess.tip) a.tips.splice(a.tips.length ? 1 : 0, 0, tess.tip);
   document.querySelector('.topbar').style.setProperty('--top-bg', `hsl(${hue} 45% 30%)`);
   const head = `<div class="hero report-hero bleed" style="--hue:${hue}">
       <div class="report-song">${esc(song.title)} · ${fmtDate(take.date)} · ${fmtTime(take.duration)}</div>`;
@@ -483,7 +616,7 @@ async function renderTake() {
         <div class="fact"><b>${a.tuning.inTunePct.toFixed(0)}%</b><span>del tiempo afinado (±25)</span></div>
         <div class="fact"><b>${a.range.lowName}–${a.range.highName}</b><span>rango usado</span></div>
         <div class="fact"><b>${a.vibrato.rate ? a.vibrato.rate.toFixed(1) + ' Hz' : '—'}</b><span>${a.vibrato.rate ? `vibrato ±${(a.vibrato.extent / 2).toFixed(0)} cents` : 'sin vibrato detectado'}</span></div>
-        <div class="fact"><b>${a.notes.length}</b><span>notas detectadas</span></div>
+        ${tess ? `<div class="fact"><b>${tess.pct}%</b><span>de las notas en tu zona cómoda (${tess.v.name.toLowerCase()})</span></div>` : `<div class="fact"><b>${a.notes.length}</b><span>notas detectadas</span></div>`}
       </div>
 
       <h3 class="section-title">Tono de voz</h3>
@@ -516,7 +649,7 @@ async function renderTake() {
   const audio = $('#takeAudio');
   const draw = () => drawRoll($('#takeRoll'), {
     points, notes: a.notes, t0: offset, t1: offset + Math.min(10, Math.max(2, take.duration)), lo, hi,
-    keyPc: song.keyPc, scale: song.scale, notation: settings.notation,
+    keyPc: song.keyPc, scale: song.scale, notation: settings.notation, band: voiceBand(),
     playhead: audio && !audio.paused ? audio.currentTime : audio?.currentTime || null,
   });
   draw();
@@ -533,6 +666,25 @@ async function renderTake() {
     audio.onplay = follow;
     audio.onseeked = follow;
   }
+}
+
+/** Cuánto de la toma cae en la zona cómoda de la tesitura elegida, y consejo si se sale. */
+function tessituraCheck(a) {
+  const v = voiceType(settings.voiceType);
+  if (!v || a.empty || !a.notes.length) return null;
+  const dur = a.notes.reduce((t, n) => t + n.duration, 0) || 1;
+  const inC = a.notes.filter((n) => n.target >= v.comfort[0] && n.target <= v.comfort[1]).reduce((t, n) => t + n.duration, 0);
+  const above = a.notes.filter((n) => n.target > v.range[1]).map((n) => n.target);
+  const below = a.notes.filter((n) => n.target < v.range[0]).map((n) => n.target);
+  const highC = a.notes.filter((n) => n.target > v.comfort[1]);
+  let tip = null;
+  if (above.length) tip = `Llegas a ${nn(Math.max(...above))}, por encima de la extensión habitual de ${v.name.toLowerCase()} (${nn(v.range[1])}). Si te cuesta, plantéate bajar la canción de tono.`;
+  else if (below.length) tip = `Bajas hasta ${nn(Math.min(...below))}, por debajo de la extensión habitual de ${v.name.toLowerCase()} (${nn(v.range[0])}). Si no suena con cuerpo, sube la canción de tono.`;
+  else if (highC.length && highC.reduce((t, n) => t + n.duration, 0) / dur > 0.25) {
+    const err = highC.reduce((t, n) => t + n.absCents, 0) / highC.length;
+    tip = `Más de un cuarto de la canción está por encima de tu zona cómoda (${nn(v.comfort[1])})${err > 20 ? ` y ahí desafinas más (±${err.toFixed(0)} cents)` : ''}. Trabaja esas notas con escalas antes de cantarla entera.`;
+  }
+  return { v, pct: Math.round((100 * inC) / dur), tip };
 }
 
 // ---------- Entrenamiento ----------
@@ -552,12 +704,15 @@ $('#exStart').onclick = async () => {
   const type = exType();
   const def = EXERCISES[type];
   const root = settings.exRoot;
-  const targets = def.seq ? def.seq.map((s) => root + s) : [root + Math.floor(Math.random() * 13)];
+  const vt = voiceType(settings.voiceType);
+  const randomNote = vt ? vt.comfort[0] + Math.floor(Math.random() * (vt.comfort[1] - vt.comfort[0] + 1)) : root + Math.floor(Math.random() * 13);
+  const targets = def.seq ? def.seq.map((s) => root + s) : [randomNote];
   const ex = (exercise = { type, targets, dur: def.dur, lanes: [], phase: 'listen', center: root + 4 });
   $('#exStart').classList.add('stop');
   $('#exStart').setAttribute('aria-label', 'Cancelar ejercicio');
   $('#exResult').innerHTML = '';
   const status = $('#exStatus'), tgt = $('#exTarget');
+  tgt.classList.remove('idle');
   try {
     status.textContent = 'Escucha la referencia…';
     for (const m of targets) {
@@ -617,7 +772,7 @@ function drawExerciseRoll() {
     points: singing ? livePointsSince(engine.rec.t0, fold) : [],
     lanes: ex.lanes.length ? ex.lanes : ex.targets.map((m, i) => ({ start: i * ex.dur, end: (i + 1) * ex.dur, midi: m })),
     t0: 0, t1: total, lo: Math.min(...ex.targets) - 4, hi: Math.max(...ex.targets) + 4,
-    notation: settings.notation, playhead: singing ? now : null,
+    notation: settings.notation, playhead: singing ? now : null, band: voiceBand(),
   });
 }
 
@@ -642,9 +797,11 @@ async function renderTrainLog() {
   if (!exercise) {
     const type = exType(), def = EXERCISES[type];
     const targets = (def.seq || [0]).map((s) => settings.exRoot + s);
+    $('#exTarget').textContent = def.seq ? nn(targets[0]) : '?';
+    $('#exTarget').classList.add('idle');
     drawRoll($('#exRoll'), {
       points: [], lanes: targets.map((m, i) => ({ start: i * def.dur, end: (i + 1) * def.dur, midi: m })),
-      t0: 0, t1: targets.length * def.dur, lo: Math.min(...targets) - 4, hi: Math.max(...targets) + 4, notation: settings.notation,
+      t0: 0, t1: targets.length * def.dur, lo: Math.min(...targets) - 4, hi: Math.max(...targets) + 4, notation: settings.notation, band: voiceBand(),
     });
   }
 }
@@ -678,7 +835,7 @@ async function renderProgress() {
     <div class="stat-tile"><b>${minutes < 10 ? minutes.toFixed(1) : minutes.toFixed(0)}</b><span>minutos cantados</span></div>
     <div class="stat-tile"><b>${takes.length}</b><span>tomas grabadas</span></div>
     <div class="stat-tile"><b>${thisW != null ? '±' + thisW.toFixed(1) : '—'}${delta}</b><span>cents medios esta semana</span></div>
-    <div class="stat-tile wide"><b>${lows.length ? `${nn(Math.min(...lows))} – ${nn(Math.max(...highs))}` : '—'}</b><span>rango vocal registrado</span></div>`;
+    <div class="stat-tile wide"><b>${lows.length ? `${nn(Math.min(...lows))} – ${nn(Math.max(...highs))}` : '—'}</b><span>rango vocal registrado${lows.length ? ` · encaja con ${suggestVoiceTypes(Math.min(...lows), Math.max(...highs))[0].name.toLowerCase()}` : ''}${voiceType(settings.voiceType) ? ` · tu tesitura: ${voiceType(settings.voiceType).name.toLowerCase()}` : ''}</span></div>`;
   const scoreSeries = takes.map((t) => ({ x: t.date, y: t.summary.score }));
   drawChart($('#progScore'), scoreSeries, { yMin: 0, yMax: 100 });
   drawChart($('#progCents'), takes.map((t) => ({ x: t.date, y: t.summary.meanAbsCents })), { yMin: 0, color: getComputedStyle(document.documentElement).getPropertyValue('--curve').trim() });
@@ -699,7 +856,7 @@ function bindSettings() {
   $('#setA4').value = settings.a4;
   $('#setSens').value = settings.sensitivity;
   $('#setAudio').checked = settings.saveAudio;
-  $('#setNotation').onchange = (e) => { settings.notation = e.target.value; saveSettings(); refreshSelects(); renderProgress(); };
+  $('#setNotation').onchange = (e) => { settings.notation = e.target.value; saveSettings(); refreshSelects(); renderVoiceCards(); renderProgress(); };
   $('#setA4').onchange = (e) => { settings.a4 = Math.max(415, Math.min(466, +e.target.value || 440)); e.target.value = settings.a4; saveSettings(); };
   $('#setSens').oninput = (e) => { settings.sensitivity = +e.target.value; saveSettings(); };
   $('#setAudio').onchange = (e) => { settings.saveAudio = e.target.checked; saveSettings(); };
@@ -739,6 +896,9 @@ $('#wipeBtn').onclick = async () => {
 
 // ---------- Inicio ----------
 refreshSelects();
+renderVoiceCards();
+// Primera vez: pedir la tesitura para poder recomendar en qué notas trabajar
+if (!settings.voiceType && !settings.voicePrompted) setTimeout(openVoiceDialog, 600);
 bindSettings();
 drawRoll($('#tRoll'), { points: [], t0: 0, t1: 6, lo: 53, hi: 67, keyPc: settings.tunerKey, scale: settings.tunerScale, notation: settings.notation });
 requestAnimationFrame(frameLoop);

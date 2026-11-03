@@ -29,6 +29,7 @@ Combina tres cosas que normalmente van separadas: afinador en vivo, registro de 
 ## Capabilities and Constraints
 
 - Afinador de voz en vivo (YIN + seguimiento fluido), tonalidad/escala de referencia, notación Do-Re-Mi o C-D-E, La4 configurable.
+- Tesitura (8 tipos de voz, con prueba de rango): zona cómoda y extensión recomendadas; guían ejercicios, rollo de notas e informes. Los rangos son orientativos.
 - Afinador de guitarra: detección automática de cuerda o cuerda fijada con tono de referencia; afinaciones alternativas.
 - Analizador de espectro: espectro logarítmico con retención de picos, fundamental y armónicos, espectrograma.
 - Canciones con tomas (curva de tono + audio), informe con puntuación, piano-roll sincronizado, consejos.

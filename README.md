@@ -5,6 +5,7 @@ Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra** y **anal
 ## Qué hace
 
 ### Canto (profesor de canto)
+- **Tesitura**: elige tu tipo de voz (bajo, bajo-barítono, barítono, tenor, contratenor, contralto, mezzosoprano, soprano) o haz la **prueba de rango** y te la sugiere. Te recomienda una zona cómoda para trabajar a diario y tu extensión, la marca en el rollo de notas, ajusta los ejercicios a tu rango y avisa en el informe si una canción se sale.
 - **Afinar voz**: nota, cents y curva de tono en tiempo real, con tonalidad y escala de referencia.
 - **Canciones**: crea canciones y graba tomas. Cada toma genera un informe: vista tipo Melodyne (bloques de nota coloreados por desafinación + curva, sincronizada con el audio), afinación, tendencia alta/baja, estabilidad, vibrato, rango, notas difíciles, **tono de voz** (brillo, aire, dinámica) y **emoción** estimada, con consejos.
 - **Entrenar**: nota sostenida, nota al azar, escalas mayor/menor y arpegio con referencia sonora (vale cualquier octava).
