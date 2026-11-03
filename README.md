@@ -1,6 +1,6 @@
 # MUSIC MAN 🎤🎸
 
-Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra** y **analizador de espectro** en una app web que funciona en el móvil (y se instala como app).
+Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra**, **reconocimiento de acordes** y **analizador de espectro** en una app web que funciona en el móvil (y se instala como app).
 
 ## Qué hace
 
@@ -14,6 +14,11 @@ Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra** y **anal
 - Afinador cromático con detección automática de la cuerda, o fijando una cuerda (suena su nota de referencia).
 - Afinaciones: estándar, Drop D, medio tono y un tono abajo, Drop C, DADGAD, Open G, Open D y Open E.
 - Marca cada cuerda como afinada tras medio segundo dentro de ±4 cents.
+
+### Acordes
+- **En vivo**: toca o canta y muestra el acorde que suena, con su posición de guitarra o piano y el historial.
+- **Canción**: elige un archivo de audio del móvil y obtén sus acordes en el tiempo, la tonalidad y el tempo (BPM). Reproductor con acorde actual y siguiente, línea de acordes desplazable (toca para saltar), cambio de tono, cejilla (muestra las formas a tocar), velocidad lenta sin cambiar el tono, bucle de un tramo y todos los acordes de la canción con su diagrama. Se guardan en una biblioteca.
+- Reconoce mayores, menores, séptimas, maj7, m7, sus2, sus4, disminuidos y aumentados. Todo se analiza en el propio dispositivo.
 
 ### Espectro
 - Espectro en tiempo real (FFT de 8192 puntos, eje de frecuencia logarítmico) con retención de picos, tono fundamental y armónicos marcados.
@@ -50,6 +55,8 @@ Publicada con GitHub Pages: https://taboadamusica-hue.github.io/App-para-afinar-
 - `js/analysis.js` — análisis de tomas: afinación, vibrato, timbre y emoción.
 - `js/audio.js` — micrófono, grabación, tonos de referencia y analizador de espectro.
 - `js/draw.js` — rollo de piano, gráficas, espectro y espectrograma.
+- `js/fft.js`, `js/chords.js` — FFT, cromagrama, reconocimiento de acordes (plantillas + Viterbi), tonalidad y tempo.
+- `js/chordshapes.js`, `js/chordsview.js` — diagramas de guitarra y piano, y la pantalla Acordes.
 - `js/app.js` — interfaz.
 
 > La emoción es una estimación heurística (volumen, timbre, ritmo, contorno melódico y escala): orientación, no juicio absoluto.

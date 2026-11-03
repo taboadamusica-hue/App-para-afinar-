@@ -3,6 +3,7 @@ import { freqToMidi, midiToFreq, noteName, nearestScaleMidi, nearestString, NOTE
 import { analyzeTake, scoreSustain, scoreSequence, EMOTION_LIST } from './analysis.js';
 import { MicEngine } from './audio.js';
 import * as db from './db.js';
+import { initChords } from './chordsview.js';
 import { drawRoll, drawChart, circumplexSvg, errColor, drawSpectrum, drawSpectrogramColumn, clearSpectrogram, spectrumPeak } from './draw.js';
 
 // ---------- Ajustes ----------
@@ -57,11 +58,12 @@ $('#micBtn').onclick = () => (engine.running ? stopMic() : startMic());
 
 // ---------- Navegación ----------
 // Pestañas: Canto (afinar · canciones · entrenar), Guitarra, Espectro, Progreso
-const GROUP = { tuner: 'voice', songs: 'voice', song: 'voice', take: 'voice', train: 'voice', guitar: 'guitar', spectrum: 'spectrum', progress: 'progress' };
+const GROUP = { tuner: 'voice', songs: 'voice', song: 'voice', take: 'voice', train: 'voice', guitar: 'guitar', chords: 'chords', spectrum: 'spectrum', progress: 'progress' };
 const SUB = { tuner: 'tuner', songs: 'songs', song: 'songs', take: 'songs', train: 'train' };
 let lastVoiceView = 'tuner';
 function go(v) {
   if (v === 'voice') v = lastVoiceView;
+  if (view === 'chords' && v !== 'chords') chords.onLeave();
   view = v;
   if (SUB[v] && !BACK[v]) lastVoiceView = v;
   document.querySelectorAll('.view').forEach((el) => el.classList.toggle('active', el.id === 'view-' + v));
@@ -69,13 +71,13 @@ function go(v) {
   const sub = $('#subnav');
   sub.hidden = !SUB[v] || !!BACK[v];
   sub.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.go === SUB[v])));
-  const titles = { tuner: 'Canto', songs: 'Canto', song: '', take: 'Tu toma', train: 'Canto', guitar: 'Guitarra', spectrum: 'Espectro', progress: 'Progreso' };
+  const titles = { tuner: 'Canto', songs: 'Canto', song: '', take: 'Tu toma', train: 'Canto', guitar: 'Guitarra', chords: 'Acordes', spectrum: 'Espectro', progress: 'Progreso' };
   $('#viewTitle').textContent = titles[v];
   $('#backBtn').hidden = !BACK[v];
   if (v !== 'song' && v !== 'take') document.querySelector('.topbar').style.removeProperty('--top-bg');
   engine.setMode(v === 'guitar' ? 'guitar' : 'voice');
   window.scrollTo(0, 0);
-  ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, guitar: renderGuitar })[v]?.();
+  ({ songs: renderSongs, song: renderSong, train: renderTrainLog, progress: renderProgress, guitar: renderGuitar, chords: () => chords.onShow() })[v]?.();
   if (GROUP[v] === 'voice' && !settings.voiceType && !settings.voicePrompted) setTimeout(openVoiceDialog, 350);
 }
 const BACK = { song: 'songs', take: 'song' };
@@ -408,6 +410,7 @@ function frameLoop() {
     else if (view === 'song' && recording) drawRecordingRoll();
     else if (view === 'train' && exercise) drawExerciseRoll();
   }
+  if (view === 'chords') chords.onFrame(performance.now());
   requestAnimationFrame(frameLoop);
 }
 
@@ -856,7 +859,7 @@ function bindSettings() {
   $('#setA4').value = settings.a4;
   $('#setSens').value = settings.sensitivity;
   $('#setAudio').checked = settings.saveAudio;
-  $('#setNotation').onchange = (e) => { settings.notation = e.target.value; saveSettings(); refreshSelects(); renderVoiceCards(); renderProgress(); };
+  $('#setNotation').onchange = (e) => { settings.notation = e.target.value; saveSettings(); refreshSelects(); renderVoiceCards(); renderProgress(); chords.repaint(); };
   $('#setA4').onchange = (e) => { settings.a4 = Math.max(415, Math.min(466, +e.target.value || 440)); e.target.value = settings.a4; saveSettings(); };
   $('#setSens').oninput = (e) => { settings.sensitivity = +e.target.value; saveSettings(); };
   $('#setAudio').onchange = (e) => { settings.saveAudio = e.target.checked; saveSettings(); };
@@ -893,6 +896,9 @@ $('#wipeBtn').onclick = async () => {
   toast('Datos borrados.');
   renderProgress();
 };
+
+// ---------- Acordes ----------
+const chords = initChords({ $, engine, settings, saveSettings, toast, db, esc, startMic, isActive: () => view === 'chords' });
 
 // ---------- Inicio ----------
 refreshSelects();

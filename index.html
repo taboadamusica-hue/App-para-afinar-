@@ -31,6 +31,8 @@
       <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
       <symbol id="i-voice" viewBox="0 0 24 24"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 10.5a6.5 6.5 0 0 0 13 0M12 17v4.5M8.5 21.5h7"/></symbol>
       <symbol id="i-guitar" viewBox="0 0 24 24"><path d="m14 10 6.5-6.5M19 2l3 3"/><path d="M11.5 8.5c-1.4-1.4-4-1.2-5.6.4-1 1-1.2 2.3-.8 3.4-1.6.2-2.8 1.3-2.9 3-.1 2.5 2.1 5 4.5 5.4 1.8.3 3.3-.9 3.6-2.6 1.1.4 2.4.1 3.4-.9 1.6-1.6 1.8-4.2.4-5.6"/><circle cx="9.5" cy="14.5" r="1.3"/></symbol>
+      <symbol id="i-chords" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 8h16M9.3 3v18M14.7 3v18"/><circle cx="9.3" cy="12" r="1.4" fill="currentColor"/><circle cx="14.7" cy="16" r="1.4" fill="currentColor"/></symbol>
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M12 17v-6M9 14l3-3 3 3"/></symbol>
       <symbol id="i-spectrum" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 20v-5M8.5 20V9M12 20v-8M15.5 20V5M19 20v-6"/></symbol>
     </defs>
   </svg>
@@ -88,6 +90,70 @@
         <label class="pill-select"><span>Afinación</span><select id="gTuning"></select></label>
       </div>
       <p class="fineprint">Toca una cuerda para oír su nota y fijarla; vuelve a tocarla para volver al modo automático. Una cuerda se marca como afinada tras medio segundo dentro de ±4 cents.</p>
+    </section>
+
+    <!-- ACORDES -->
+    <section id="view-chords" class="view" aria-label="Acordes">
+      <nav class="subnav subnav-2" role="tablist" aria-label="Modo de acordes">
+        <button role="tab" data-chmode="live" aria-selected="true">En vivo</button>
+        <button role="tab" data-chmode="song" aria-selected="false">Canción</button>
+      </nav>
+
+      <div id="chLive">
+        <div class="chord-stage">
+          <div id="chNow" class="chord-now idle">–</div>
+          <div id="chNowSub" class="chord-sub">Toca o canta y verás el acorde</div>
+          <div id="chDiagram" class="chord-diagram"></div>
+        </div>
+        <h3 class="section-title">Últimos acordes</h3>
+        <div id="chHistory" class="chord-history"></div>
+      </div>
+
+      <div id="chSong" hidden>
+        <div id="chPick">
+          <label class="file-drop">
+            <input type="file" id="chFile" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden />
+            <svg><use href="#i-file"/></svg>
+            <b>Elegir canción</b>
+            <span>Un archivo de audio de tu móvil (MP3, M4A, WAV…). Se analiza en el propio dispositivo.</span>
+          </label>
+          <div id="chProgress" class="ch-progress" hidden><div class="bar"><i id="chProgressBar"></i></div><span id="chProgressText">Analizando…</span></div>
+          <h3 class="section-title">Canciones analizadas</h3>
+          <div id="chLibrary" class="list"></div>
+        </div>
+
+        <div id="chPlayer" hidden>
+          <div class="ch-head">
+            <div class="ch-title-wrap"><h2 id="chTitle" class="ch-title"></h2><div id="chMeta" class="ch-meta"></div></div>
+            <button id="chClose" class="icon-btn" aria-label="Volver a la lista"><svg><use href="#i-back"/></svg></button>
+          </div>
+          <div class="chord-stage chord-stage-song">
+            <div class="now-next">
+              <div><span class="nn-label">Ahora</span><div id="chSongNow" class="chord-now">–</div></div>
+              <div class="nn-next"><span class="nn-label">Siguiente</span><div id="chSongNext" class="chord-next">–</div></div>
+            </div>
+            <div id="chSongDiagram" class="chord-diagram"></div>
+          </div>
+          <div id="chTimeline" class="ch-timeline bleed" role="list" aria-label="Línea de acordes"></div>
+          <audio id="chAudio" preload="auto" class="ch-audio" controls></audio>
+          <div class="ch-controls">
+            <div class="stepper"><span>Tono</span><button id="chTrDown" class="icon-btn" aria-label="Bajar medio tono">−</button><b id="chTr">0</b><button id="chTrUp" class="icon-btn" aria-label="Subir medio tono">+</button></div>
+            <label class="pill-select"><span>Cejilla</span><select id="chCapo"></select></label>
+            <label class="pill-select"><span>Velocidad</span><select id="chSpeed"><option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="0.9">0,9×</option><option value="1" selected>1×</option><option value="1.1">1,1×</option></select></label>
+          </div>
+          <div class="btn-row">
+            <button id="chLoop" class="btn btn-dark toggle" aria-pressed="false">Repetir este tramo</button>
+            <div class="seg seg-inline" role="radiogroup" aria-label="Instrumento">
+              <label><input type="radio" name="chInst" value="guitar" checked /><span>Guitarra</span></label>
+              <label><input type="radio" name="chInst" value="piano" /><span>Piano</span></label>
+            </div>
+          </div>
+          <h3 class="section-title">Acordes de la canción</h3>
+          <div id="chAll" class="chord-grid"></div>
+          <div class="btn-row"><button id="chDelete" class="btn btn-dark danger">Eliminar de la biblioteca</button></div>
+          <p class="fineprint">Reconocimiento automático: acierta bien con acordes claros y puede confundir acordes parecidos (por ejemplo Lam y Do) en mezclas densas. Usa el oído como juez final.</p>
+        </div>
+      </div>
     </section>
 
     <!-- ESPECTRO -->
@@ -199,6 +265,7 @@
   <nav class="tabbar" aria-label="Secciones">
     <button data-go="voice" class="active"><svg><use href="#i-voice"/></svg>Canto</button>
     <button data-go="guitar"><svg><use href="#i-guitar"/></svg>Guitarra</button>
+    <button data-go="chords"><svg><use href="#i-chords"/></svg>Acordes</button>
     <button data-go="spectrum"><svg><use href="#i-spectrum"/></svg>Espectro</button>
     <button data-go="progress"><svg><use href="#i-progress"/></svg>Progreso</button>
   </nav>

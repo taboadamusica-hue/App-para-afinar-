@@ -1,7 +1,7 @@
 // Service worker: funciona sin conexión.
-const CACHE = 'musicman-v3';
+const CACHE = 'musicman-v4';
 const ASSETS = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'fonts/figtree-latin.woff2',
-  'js/app.js', 'js/pitch.js', 'js/analysis.js', 'js/audio.js', 'js/db.js', 'js/draw.js', 'js/tracker.js'];
+  'js/app.js', 'js/pitch.js', 'js/analysis.js', 'js/audio.js', 'js/db.js', 'js/draw.js', 'js/tracker.js', 'js/fft.js', 'js/chords.js', 'js/chordshapes.js', 'js/chordsview.js'];
 
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (e) => e.waitUntil(

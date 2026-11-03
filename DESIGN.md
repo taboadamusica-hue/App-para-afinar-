@@ -134,7 +134,7 @@ Figtree (variable 400–900, alojada en `fonts/`, licencia OFL) para todo. Títu
 
 ## Layout
 
-Una columna de 640px máximo, márgenes laterales de 16px. Barra superior fija (título a la izquierda, micro a la derecha) y barra inferior de cuatro pestañas (Canto, Guitarra, Espectro, Progreso), ambas alineadas con la columna en pantallas anchas. Canto tiene un control segmentado propio (Afinar voz · Canciones · Entrenar) bajo la barra superior. Los lienzos (rollo de piano, curva) van a sangre (`.bleed`). Secciones separadas 28px por encima y 12px por debajo del título.
+Una columna de 640px máximo, márgenes laterales de 16px. Barra superior fija (título a la izquierda, micro a la derecha) y barra inferior de cinco pestañas (Canto, Guitarra, Acordes, Espectro, Progreso), ambas alineadas con la columna en pantallas anchas. Canto tiene un control segmentado propio (Afinar voz · Canciones · Entrenar) bajo la barra superior. Los lienzos (rollo de piano, curva) van a sangre (`.bleed`). Secciones separadas 28px por encima y 12px por debajo del título.
 
 ## Elevation & Depth
 
@@ -169,6 +169,9 @@ Pista de superficie con tres segmentos; el activo sube a superficie 3 con texto 
 
 ### Cuerdas de guitarra
 Seis botones en rejilla (número de cuerda, nota grande, octava). La cuerda detectada sube a superficie 3; la fijada se invierte a blanco; la afinada lleva un punto menta.
+
+### Acordes
+Nombre del acorde a 72–104px / 900 como lectura principal; «Siguiente» en gris a 34px. Diagramas de guitarra en SVG (trastes en superficie 3, puntos y cejilla en blanco, cuerdas al aire con círculo y × para las que no suenan) y de piano (teclas del acorde en menta). Línea de acordes como fila desplazable de bloques de superficie con ancho proporcional a la duración; el actual se invierte a blanco y el bucle lleva una línea menta inferior.
 
 ### Espectro y espectrograma
 Eje logarítmico con rejilla en superficie de lienzo; curva azul con relleno degradado hacia transparente, retención de picos en gris al 50 %, fundamental en menta sólida y armónicos en menta discontinua. El espectrograma usa la rampa fondo → azul → menta → ámbar → blanco.

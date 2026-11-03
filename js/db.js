@@ -1,6 +1,6 @@
 // Almacenamiento local con IndexedDB (canciones, tomas con audio, entrenamientos).
 const DB_NAME = 'afinavoz'; // nombre interno heredado: no cambiarlo o se perderían los datos guardados
-const VERSION = 1;
+const VERSION = 2; // v2: almacén de canciones analizadas (acordes)
 let dbp = null;
 
 function open() {
@@ -12,6 +12,7 @@ function open() {
       if (!db.objectStoreNames.contains('songs')) db.createObjectStore('songs', { keyPath: 'id' });
       if (!db.objectStoreNames.contains('takes')) db.createObjectStore('takes', { keyPath: 'id' }).createIndex('songId', 'songId');
       if (!db.objectStoreNames.contains('training')) db.createObjectStore('training', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('chordsongs')) db.createObjectStore('chordsongs', { keyPath: 'id' });
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
