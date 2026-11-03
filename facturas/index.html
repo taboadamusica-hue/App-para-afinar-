@@ -67,6 +67,7 @@ th{color:var(--muted);font-weight:600;font-size:12px}
 <body>
 <header>
   <h1>🧾 Mis Facturas</h1>
+  <span id="sync" style="font-size:12px;opacity:.9;display:flex;gap:6px;align-items:center"></span>
   <nav>
     <button data-view="dashboard" class="on">Resumen</button>
     <button data-view="invoices">Facturas</button>
@@ -229,7 +230,69 @@ function load(){
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) return d; } catch(e){}
   return {settings:{iva:21, irpf:15, days:30, prefix:new Date().getFullYear()+'-', template:'moderna', color:'#1f3a5f', notes:''}, clients:[], invoices:[], products:[]};
 }
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){ alert('No se pudo guardar: '+e.message); } }
+function saveLocal(){ try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){} }
+function save(){ db.updatedAt = Date.now(); saveLocal(); schedulePush(); }
+
+/* ---------- Sincronización con Google Drive ---------- */
+const DRIVE = 'Google Drive', FILE = 'mis-facturas-datos.json';
+let mcp = null, driveId = null, pushTimer = null, pushing = false, pendingPush = false;
+function syncStatus(text, retry){
+  const el = $('#sync'); el.textContent = text;
+  if (retry) { const b = document.createElement('button'); b.textContent = 'Reintentar';
+    b.style.cssText = 'background:#fff;color:var(--accent);border:0;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px';
+    b.onclick = retry; el.append(b); }
+}
+function driveError(e, retry){
+  const msg = {
+    needs_reauth: 'Reconecta Google Drive en claude.ai → Ajustes → Conectores',
+    server_not_connected: 'Añade Google Drive en claude.ai → Ajustes → Conectores',
+    selection_required: 'Elige tu cuenta de Google Drive en claude.ai',
+    not_in_manifest: 'Drive no está permitido para esta página (menú Permisos)',
+    approval_required: 'Falta tu permiso para usar Drive',
+    blocked_by_policy: 'Tu organización no permite usar Drive aquí',
+    server_unavailable: 'Drive no responde ahora mismo',
+  }[e?.code] || 'Error con Drive';
+  syncStatus('⚠️ '+msg+' · datos guardados en este dispositivo', retry);
+}
+const b64ToText = b => new TextDecoder().decode(Uint8Array.from(atob(b), c=>c.charCodeAt(0)));
+async function findDriveFiles(){
+  const r = await mcp.callTool(DRIVE, 'search_files', {query:`title = '${FILE}' and trashed = false`, pageSize:10, excludeContentSnippets:true}, {cache:false});
+  return ((r.payload && r.payload.files) || []).sort((a,b)=>(b.modifiedTime||'').localeCompare(a.modifiedTime||''));
+}
+async function pullFromDrive(){
+  syncStatus('☁️ Cargando de Drive…');
+  try {
+    const files = await findDriveFiles();
+    if (!files.length) { driveId = null; if (db.invoices.length || db.clients.length) await pushToDrive(); else syncStatus('☁️ Drive conectado'); return; }
+    driveId = files[0].id;
+    const r = await mcp.callTool(DRIVE, 'download_file_content', {fileId: driveId}, {cache:false});
+    const remote = JSON.parse(b64ToText(r.payload.content));
+    if (!remote.invoices || !remote.settings) throw {code:'bad_file'};
+    if ((remote.updatedAt||0) >= (db.updatedAt||0)) { db = remote; saveLocal(); show(currentView); syncStatus('☁️ Sincronizado con Drive'); }
+    else await pushToDrive();
+  } catch(e) { driveError(e, pullFromDrive); }
+}
+function schedulePush(){ if (!mcp) return; clearTimeout(pushTimer); syncStatus('☁️ Cambios sin subir…'); pushTimer = setTimeout(pushToDrive, 2500); }
+async function pushToDrive(){
+  if (!mcp) return;
+  if (pushing) { pendingPush = true; return; }
+  pushing = true; syncStatus('☁️ Guardando en Drive…');
+  try {
+    const r = await mcp.callTool(DRIVE, 'create_file', {title: FILE, textContent: JSON.stringify(db),
+      contentMimeType: 'application/json', disableConversionToGoogleType: true});
+    const p = r.payload || {}, newId = p.id || p.file?.id;
+    const old = driveId; driveId = newId || driveId;
+    if (old && newId && old !== newId) { try { await mcp.callTool(DRIVE, 'trash_file', {fileId: old}); } catch(e){} }
+    syncStatus('☁️ Guardado en Drive ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+  } catch(e) { driveError(e, pushToDrive); }
+  pushing = false;
+  if (pendingPush) { pendingPush = false; pushToDrive(); }
+}
+(async () => {
+  try { mcp = window.claude?.use ? await window.claude.use('mcp') : null; } catch(e){ mcp = null; }
+  if (!mcp) { syncStatus('💾 Guardado en este dispositivo'); return; }
+  pullFromDrive();
+})();
 
 /* ---------- Cálculos ---------- */
 function totals(inv){
@@ -247,7 +310,9 @@ const clientName = id => (db.clients.find(c=>c.id===id)||{}).name || '—';
 const years = () => [...new Set([new Date().getFullYear(), ...db.invoices.map(i=>+i.date.slice(0,4))])].sort((a,b)=>b-a);
 
 /* ---------- Navegación ---------- */
+let currentView = 'dashboard';
 function show(view){
+  if (view !== 'editor' && view !== 'preview') currentView = view;
   document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
   $('#v-'+view).classList.remove('hidden');
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
