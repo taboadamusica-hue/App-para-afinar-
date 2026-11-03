@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101418" />
+  <meta name="description" content="Afinador de voz de bolsillo: registro de afinación por canciones, entrenamiento vocal y análisis de tono y emoción." />
+  <title>AfinaVoz</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Afina<span>Voz</span></h1>
+    <button id="micBtn" class="mic-btn" aria-pressed="false" title="Activar micrófono">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/></svg>
+      <span id="micLabel">Micro</span>
+    </button>
+  </header>
+
+  <main>
+    <!-- AFINADOR -->
+    <section id="view-tuner" class="view active">
+      <div class="tuner-card card">
+        <div class="note-display">
+          <div id="tNote" class="note">–</div>
+          <div class="note-sub"><span id="tCents">0</span> cents · <span id="tHz">0</span> Hz</div>
+        </div>
+        <div class="meter" aria-hidden="true">
+          <div class="meter-zone"></div>
+          <div class="meter-ticks"><span>-50</span><span>-25</span><span>0</span><span>+25</span><span>+50</span></div>
+          <div id="tNeedle" class="needle"></div>
+        </div>
+        <div id="tHint" class="hint">Pulsa <b>Micro</b> y canta una nota.</div>
+      </div>
+      <div class="card">
+        <canvas id="tRoll" class="roll" height="220"></canvas>
+        <div class="row gap">
+          <label>Tonalidad <select id="tKey"></select></label>
+          <label>Escala <select id="tScale"></select></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- CANCIONES -->
+    <section id="view-songs" class="view">
+      <div id="songList"></div>
+      <button id="newSongBtn" class="btn primary block">+ Nueva canción</button>
+    </section>
+
+    <section id="view-song" class="view">
+      <button class="btn ghost back" data-go="songs">← Canciones</button>
+      <div class="card">
+        <div class="row between">
+          <div>
+            <h2 id="sTitle"></h2>
+            <div id="sMeta" class="muted"></div>
+          </div>
+          <button id="sEdit" class="btn ghost small">Editar</button>
+        </div>
+        <canvas id="sTrend" class="trend" height="70"></canvas>
+      </div>
+      <div class="card rec-card">
+        <canvas id="sRoll" class="roll" height="240"></canvas>
+        <div class="row between center">
+          <div><div id="sTimer" class="timer">0:00</div><div id="sNow" class="muted">Listo para grabar</div></div>
+          <button id="sRec" class="rec-btn" aria-label="Grabar toma"><span></span></button>
+        </div>
+      </div>
+      <h3>Tomas</h3>
+      <div id="takeList"></div>
+    </section>
+
+    <section id="view-take" class="view">
+      <button class="btn ghost back" data-go="song">← Volver</button>
+      <div id="takeReport"></div>
+    </section>
+
+    <!-- ENTRENAR -->
+    <section id="view-train" class="view">
+      <div class="card">
+        <h2>Entrenamiento</h2>
+        <p class="muted">Escucha la referencia y repítela. Cada ejercicio se guarda en tu progreso.</p>
+        <div class="row gap wrap">
+          <label>Ejercicio
+            <select id="exType">
+              <option value="sustain">Nota sostenida</option>
+              <option value="scale">Escala mayor (5 notas)</option>
+              <option value="arpeggio">Arpegio</option>
+              <option value="minor">Escala menor (5 notas)</option>
+              <option value="random">Nota al azar en tu rango</option>
+            </select>
+          </label>
+          <label>Nota base <select id="exRoot"></select></label>
+        </div>
+        <button id="exStart" class="btn primary block">Empezar</button>
+      </div>
+      <div class="card">
+        <div id="exStage" class="ex-stage">
+          <div id="exTarget" class="note">–</div>
+          <div id="exStatus" class="muted">Elige un ejercicio</div>
+        </div>
+        <canvas id="exRoll" class="roll" height="200"></canvas>
+        <div id="exResult"></div>
+      </div>
+      <h3>Últimos ejercicios</h3>
+      <div id="exLog"></div>
+    </section>
+
+    <!-- PROGRESO -->
+    <section id="view-progress" class="view">
+      <div id="progTiles" class="tiles"></div>
+      <div class="card">
+        <h3>Puntuación de tus tomas</h3>
+        <canvas id="progScore" class="chart" height="160"></canvas>
+      </div>
+      <div class="card">
+        <h3>Desafinación media (cents, menos es mejor)</h3>
+        <canvas id="progCents" class="chart" height="160"></canvas>
+      </div>
+      <div class="card">
+        <h3>Mejora por canción</h3>
+        <div id="progSongs"></div>
+      </div>
+      <div class="card">
+        <h3>Ajustes</h3>
+        <div class="settings">
+          <label>Notación
+            <select id="setNotation"><option value="latin">Do Re Mi</option><option value="english">C D E</option></select>
+          </label>
+          <label>La4 de referencia (Hz) <input id="setA4" type="number" min="415" max="466" step="1" /></label>
+          <label>Sensibilidad del micro <input id="setSens" type="range" min="1" max="10" step="1" /></label>
+          <label class="check"><input id="setAudio" type="checkbox" /> Guardar audio de las tomas</label>
+        </div>
+        <div class="row gap wrap">
+          <button id="exportBtn" class="btn">Exportar copia</button>
+          <label class="btn">Importar copia<input id="importInput" type="file" accept="application/json" hidden /></label>
+          <button id="wipeBtn" class="btn danger">Borrar todo</button>
+        </div>
+        <p class="muted small">Todo se guarda solo en este dispositivo. El análisis de tono y emoción es una estimación basada en volumen, timbre, ritmo, contorno melódico y escala; úsalo como orientación, no como juicio absoluto.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button data-go="tuner" class="active"><span>🎯</span>Afinador</button>
+    <button data-go="songs"><span>🎵</span>Canciones</button>
+    <button data-go="train"><span>🏋️</span>Entrenar</button>
+    <button data-go="progress"><span>📈</span>Progreso</button>
+  </nav>
+
+  <dialog id="songDialog">
+    <form method="dialog" id="songForm">
+      <h3 id="songDialogTitle">Nueva canción</h3>
+      <label>Título <input name="title" required maxlength="80" /></label>
+      <label>Artista <input name="artist" maxlength="80" /></label>
+      <div class="row gap">
+        <label>Tonalidad <select name="keyPc"></select></label>
+        <label>Escala <select name="scale"></select></label>
+      </div>
+      <label>Emoción que buscas transmitir <select name="targetEmotion"></select></label>
+      <div class="row gap end">
+        <button type="button" id="songDelete" class="btn danger" hidden>Eliminar</button>
+        <button value="cancel" formnovalidate class="btn ghost">Cancelar</button>
+        <button value="ok" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

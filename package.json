@@ -1,0 +1,11 @@
+{
+  "name": "afinavoz",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Afinador de voz de bolsillo: registro de afinación por canciones, entrenamiento y análisis de tono y emoción.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "python3 -m http.server 8080"
+  }
+}
