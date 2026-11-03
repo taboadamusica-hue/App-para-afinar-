@@ -1,218 +1,324 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#1f3a5f">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Mis Facturas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#24463c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600&display=swap">
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--text:#1d2330;--muted:#6b7385;--line:#e2e5ea;--accent:#1f3a5f;--soft:#e8ecf2;--ok:#1e8e5a;--warn:#c27c0e;--bad:#c0392b}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171d;--card:#1d222b;--text:#e6e9ef;--muted:#9aa3b5;--line:#323947;--accent:#2c5282;--soft:#2a313d}}
-:root[data-theme="dark"]{--bg:#14171d;--card:#1d222b;--text:#e6e9ef;--muted:#9aa3b5;--line:#323947;--accent:#2c5282;--soft:#2a313d}
-*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
-header{background:var(--accent);color:#fff;padding:12px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-header h1{font-size:18px;margin:0 auto 0 0}
-nav button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 10px;cursor:pointer}
-nav button.on{background:#fff;color:var(--accent)}
-main{max-width:1000px;margin:0 auto;padding:16px}
-.card{background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 180px}
-label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
-input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--card);color:var(--text)}
-textarea{min-height:60px}
-button.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;font:inherit}
-button.sec{background:var(--soft);color:var(--text)}button.del{background:#fbe9e7;color:var(--bad)}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);font-size:14px}
-th{color:var(--muted);font-weight:600;font-size:12px}
-.num{text-align:right}
-.tag{padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
-.pagada{background:#e3f5ec;color:var(--ok)}.pendiente{background:#fdf2e0;color:var(--warn)}.vencida{background:#fbe9e7;color:var(--bad)}.borrador{background:#eceef2;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-.stat b{display:block;font-size:22px}.stat span{color:var(--muted);font-size:12px}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.toolbar>*{flex:0 1 auto}
-.hidden{display:none!important}
-.items td input{padding:6px}
-.scroll{overflow-x:auto}
-/* ---------- Vista de factura imprimible ---------- */
-#preview{background:#fff;color:#111;padding:40px;max-width:800px;margin:0 auto;font-size:14px}
-#preview h2{margin:0}
-#preview .meta{display:flex;justify-content:space-between;gap:24px;margin:24px 0}
-#preview table th{color:#555}
-#preview .totals{margin-left:auto;width:280px;margin-top:16px}
-#preview .totals div{display:flex;justify-content:space-between;padding:4px 0}
-#preview .totals .grand{font-weight:700;font-size:16px;border-top:2px solid #111;padding-top:8px}
-#preview .notes{margin-top:32px;color:#555;white-space:pre-wrap}
-/* Plantilla clásica */
-#preview.t-clasica{font-family:Georgia,serif}
-#preview.t-clasica .head{border-bottom:2px solid #111;padding-bottom:12px}
-/* Plantilla moderna */
-#preview.t-moderna .head{background:var(--brand,#1f3a5f);color:#fff;margin:-40px -40px 0;padding:32px 40px}
-#preview.t-moderna th{background:#f2f4f7}
-/* Plantilla minimalista */
-#preview.t-minimal{font-family:"Helvetica Neue",Arial,sans-serif;letter-spacing:.2px}
-#preview.t-minimal th,#preview.t-minimal td{border-bottom:1px solid #eee}
-#preview.t-minimal h2{font-weight:300;font-size:28px}
-@media print{
-  body{background:#fff}
-  header,.noprint{display:none!important}
-  main{padding:0;max-width:none}
-  .card{box-shadow:none;padding:0;margin:0}
-  #preview{padding:0}
-  #preview.t-moderna .head{margin:0 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+/* Layout: barra lateral fija en escritorio, barra superior con pestañas en móvil; el contenido en una columna de 960px. */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --sunken:#eaeee9; --fg:#1a2420; --muted:#66736d; --line:#dbe1dc;
+  --accent:#24463c; --accent-fg:#ffffff; --accent-soft:#dfe9e4;
+  --ok:#2c7a55; --ok-bg:#e2f1e8; --warn:#9a6512; --warn-bg:#f8eedb; --bad:#a63a2f; --bad-bg:#f7e4e1; --draft:#66736d; --draft-bg:#eaeee9;
+  --paper:#ffffff; --paper-ink:#1b1f1d; --paper-muted:#6b716e; --paper-line:#e3e6e4;
+  --f-display:"Newsreader", "Iowan Old Style", Georgia, serif;
+  --f-body:"Hanken Grotesk", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r:10px; --shadow:0 1px 2px rgba(20,35,30,.06), 0 8px 24px -12px rgba(20,35,30,.12);
 }
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101513; --surface:#171e1b; --sunken:#1d2522; --fg:#e4ebe7; --muted:#93a19a; --line:#2a3430;
+  --accent:#8cc4ae; --accent-fg:#0f1714; --accent-soft:#23332d;
+  --ok:#7fcfa3; --ok-bg:#1c3328; --warn:#e5b462; --warn-bg:#382c17; --bad:#ef8f84; --bad-bg:#3a1f1c; --draft:#93a19a; --draft-bg:#232c28;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101513; --surface:#171e1b; --sunken:#1d2522; --fg:#e4ebe7; --muted:#93a19a; --line:#2a3430;
+  --accent:#8cc4ae; --accent-fg:#0f1714; --accent-soft:#23332d;
+  --ok:#7fcfa3; --ok-bg:#1c3328; --warn:#e5b462; --warn-bg:#382c17; --bad:#ef8f84; --bad-bg:#3a1f1c; --draft:#93a19a; --draft-bg:#232c28;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;margin:0}
+h1,h2,h3{font-family:var(--f-display);font-weight:500;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.num,td.num,.figure{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ----- Estructura ----- */
+.app{display:grid;grid-template-columns:minmax(0,1fr);min-height:100%}
+.side{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand h1{font-size:24px}
+.brand h1 em{font-style:italic;color:var(--accent)}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px}
+nav button{flex:0 0 auto;background:none;border:0;color:var(--muted);font:inherit;font-weight:500;padding:7px 12px;border-radius:8px;cursor:pointer}
+nav button:hover{color:var(--fg);background:var(--sunken)}
+nav button.on{color:var(--fg);background:var(--accent-soft)}
+#sync{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#sync .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+#sync.ok .dot{background:var(--ok)} #sync.warn .dot{background:var(--warn)} #sync.busy .dot{background:var(--accent);animation:pulse 1s infinite alternate}
+@keyframes pulse{to{opacity:.3}}
+main{padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.wrap>section,.stack>*{min-width:0}
+@media (min-width:900px){
+  .app{grid-template-columns:232px minmax(0,1fr)}
+  .side{height:100vh;top:0;border-bottom:0;border-right:1px solid var(--line);padding:28px 20px;gap:28px;justify-content:flex-start}
+  .brand{flex-direction:column;gap:6px}
+  nav{flex-direction:column;margin:0}
+  nav button{text-align:left;padding:9px 12px}
+  #sync{margin-top:auto}
+  main{padding-block:40px 80px;padding-left:40px;padding-right:max(40px,env(safe-area-inset-right,0px))}
+}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.pagehead h2{font-size:34px;line-height:1.1}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0}
+.panel>h3{font-size:20px;margin-bottom:4px}
+.panel>p.muted{margin:0 0 16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+/* ----- Formularios ----- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,label.lbl{font-size:12px;font-weight:500;color:var(--muted)}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--surface);color:var(--fg)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{min-height:76px;resize:vertical}
+input[type=color]{padding:3px;height:40px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-fg);border:1px solid var(--accent);border-radius:8px;padding:9px 15px;cursor:pointer;font:inherit;font-weight:500;white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{background:var(--sunken);filter:none}
+.btn.danger{background:transparent;color:var(--bad);border-color:transparent}
+.btn.danger:hover{background:var(--bad-bg);filter:none}
+.btn.sm{padding:5px 10px;font-size:13px}
+.iconbtn{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;font-size:16px;line-height:1}
+.iconbtn:hover{color:var(--bad);background:var(--bad-bg)}
+
+/* ----- Tablas ----- */
+.scroll{overflow-x:auto;min-width:0}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+th{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom-color:var(--line)}
+th.num,td.num{text-align:right}
+tbody tr:last-child td{border-bottom:0}
+tr.link{cursor:pointer} tr.link:hover td{background:var(--sunken)}
+.empty{padding:28px 10px;text-align:center;color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:2px 9px 2px 8px;border-radius:99px;font-size:12px;font-weight:600;text-transform:capitalize}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pagada{background:var(--ok-bg);color:var(--ok)}.pendiente{background:var(--warn-bg);color:var(--warn)}.vencida{background:var(--bad-bg);color:var(--bad)}.borrador{background:var(--draft-bg);color:var(--draft)}
+
+/* ----- Resumen ----- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.kpi b{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums lining-nums}
+.kpi.lead b{color:var(--accent)}
+@media (max-width:759px){.kpi.lead{grid-column:1/-1}}
+.actions select{width:auto}
+td:first-child{white-space:nowrap}
+.split{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:760px){.split{grid-template-columns:1.4fr 1fr}}
+
+/* ----- Editor ----- */
+.items td{padding:6px 4px}
+.items input{padding:7px 9px}
+.totals-box{margin-left:auto;width:min(320px,100%);display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--line)}
+.totals-box div{display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.totals-box .grand{font-family:var(--f-display);font-size:24px;padding-top:6px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{width:auto}
+.toolbar .grow{flex:1 1 220px}
+
+/* ----- Diálogos y avisos ----- */
+#modal{position:fixed;inset:0;background:rgba(10,18,15,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal .box{background:var(--surface);color:var(--fg);border-radius:12px;padding:22px;max-width:380px;width:100%;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px}
+#modal .box p{margin:0}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;
+  background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;transition:.2s;z-index:60;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ----- Factura (documento; siempre papel blanco) ----- */
+.paper-wrap{overflow-x:auto;background:var(--sunken);border-radius:var(--r);padding:24px 12px}
+#preview{background:var(--paper);color:var(--paper-ink);width:794px;min-height:1123px;margin:0 auto;padding:56px 60px;font-family:var(--f-body);font-size:13px;line-height:1.55;box-shadow:0 2px 20px rgba(0,0,0,.12)}
+#preview h2{font-family:var(--f-display);font-weight:400}
+#preview .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+#preview .from{text-align:right;color:var(--paper-muted)}
+#preview .from b{color:var(--paper-ink);font-weight:600}
+#preview .meta{display:flex;justify-content:space-between;gap:24px;margin:40px 0 32px}
+#preview .lab{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-muted);margin-bottom:4px}
+#preview table th{color:var(--paper-muted);border-bottom:1px solid var(--paper-ink);font-size:10px;letter-spacing:.12em}
+#preview table td{border-bottom:1px solid var(--paper-line);color:var(--paper-ink);font-size:13px}
+#preview .totals{margin-left:auto;width:290px;margin-top:20px}
+#preview .totals div{display:flex;justify-content:space-between;padding:5px 0;font-variant-numeric:tabular-nums}
+#preview .totals .grand{border-top:1px solid var(--paper-ink);margin-top:6px;padding-top:12px;font-family:var(--f-display);font-size:22px}
+#preview .notes{margin-top:48px;color:var(--paper-muted);white-space:pre-wrap;border-top:1px solid var(--paper-line);padding-top:16px}
+#preview .num-big{font-family:var(--f-display);font-size:15px;color:var(--paper-muted);margin-top:4px}
+#preview.t-clasica{font-family:var(--f-display);font-size:14px}
+#preview.t-clasica h2{font-size:40px;letter-spacing:.02em}
+#preview.t-clasica .head{border-bottom:3px double var(--paper-ink);padding-bottom:20px}
+#preview.t-moderna .head{background:var(--brand);color:#fff;margin:-56px -60px 0;padding:44px 60px}
+#preview.t-moderna .head .from,#preview.t-moderna .head .from b,#preview.t-moderna .num-big{color:rgba(255,255,255,.85)}
+#preview.t-moderna h2{font-size:38px}
+#preview.t-moderna .grand span:last-child{color:var(--brand)}
+#preview.t-minimal h2{font-family:var(--f-body);font-weight:300;font-size:30px;letter-spacing:.3em;text-transform:uppercase}
+#preview.t-minimal table th{border-bottom-color:var(--paper-line)}
+#preview.t-minimal .totals .grand{font-family:var(--f-body);font-weight:600;font-size:18px}
 </style>
-</head>
-<body>
-<header>
-  <h1>🧾 Mis Facturas</h1>
-  <span id="sync" style="font-size:12px;opacity:.9;display:flex;gap:6px;align-items:center"></span>
-  <nav>
-    <button data-view="dashboard" class="on">Resumen</button>
-    <button data-view="invoices">Facturas</button>
-    <button data-view="clients">Clientes</button>
-    <button data-view="templates">Plantillas</button>
-    <button data-view="settings">Ajustes</button>
-  </nav>
-</header>
-<main>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><h1>Mis <em>Facturas</em></h1><div id="sync"></div></div>
+    <nav>
+      <button data-view="dashboard" class="on">Resumen</button>
+      <button data-view="invoices">Facturas</button>
+      <button data-view="clients">Clientes</button>
+      <button data-view="templates">Plantillas</button>
+      <button data-view="settings">Ajustes</button>
+    </nav>
+  </aside>
+
+<main><div class="wrap">
 
 <!-- RESUMEN -->
-<section id="v-dashboard">
-  <div class="card">
-    <div class="toolbar"><label style="margin:auto 0">Año</label><select id="dashYear" style="width:auto"></select></div>
-    <div class="stats" id="stats"></div>
+<section id="v-dashboard" class="stack">
+  <div class="pagehead">
+    <div><div class="eyebrow">Ejercicio</div><h2>Resumen <span id="dashYearLabel"></span></h2></div>
+    <div class="actions"><select id="dashYear" aria-label="Año"></select><button class="btn" data-new>Nueva factura</button></div>
   </div>
-  <div class="card"><h3 style="margin-top:0">Pendientes de cobro</h3><div class="scroll"><table id="pendingTable"></table></div></div>
+  <div class="kpis" id="stats"></div>
+  <div class="split">
+    <div class="panel"><h3>Pendientes de cobro</h3><p class="muted">Ordenadas por fecha de vencimiento.</p><div class="scroll"><table id="pendingTable"></table></div></div>
+    <div class="panel"><h3>Por trimestre</h3><p class="muted">Para los modelos 303 (IVA) y 130 (IRPF).</p><div class="scroll"><table id="quarterTable"></table></div></div>
+  </div>
 </section>
 
-<!-- LISTA DE FACTURAS -->
-<section id="v-invoices" class="hidden">
-  <div class="card">
+<!-- FACTURAS -->
+<section id="v-invoices" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow">Registro</div><h2>Facturas</h2></div><button class="btn" data-new>Nueva factura</button></div>
+  <div class="panel stack">
     <div class="toolbar">
-      <button class="btn" id="newInvoice">+ Nueva factura</button>
-      <input id="search" placeholder="Buscar cliente, número o concepto…" style="flex:1 1 220px">
-      <select id="filterStatus" style="width:auto">
+      <input id="search" class="grow" placeholder="Buscar cliente, número o concepto">
+      <select id="filterStatus" aria-label="Estado">
         <option value="">Todos los estados</option><option value="borrador">Borrador</option>
         <option value="pendiente">Pendiente</option><option value="vencida">Vencida</option><option value="pagada">Pagada</option>
       </select>
-      <select id="filterYear" style="width:auto"></select>
-      <button class="btn sec" id="exportCsv">Exportar CSV</button>
+      <select id="filterYear" aria-label="Año"></select>
+      <button class="btn ghost" id="exportCsv">Exportar CSV</button>
     </div>
     <div class="scroll"><table id="invoiceTable"></table></div>
   </div>
 </section>
 
-<!-- EDITOR DE FACTURA -->
-<section id="v-editor" class="hidden">
-  <div class="card">
-    <h3 style="margin-top:0" id="editorTitle">Nueva factura</h3>
-    <div class="row">
-      <div><label>Número</label><input id="f-number"></div>
-      <div><label>Fecha</label><input id="f-date" type="date"></div>
-      <div><label>Vencimiento</label><input id="f-due" type="date"></div>
-      <div><label>Estado</label><select id="f-status"><option value="borrador">Borrador</option><option value="pendiente">Pendiente</option><option value="pagada">Pagada</option></select></div>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <div><label>Cliente</label><select id="f-client"></select></div>
-      <div><label>Plantilla</label><select id="f-template"></select></div>
-      <div><label>IVA %</label><input id="f-iva" type="number" step="0.01"></div>
-      <div><label>Retención IRPF %</label><input id="f-irpf" type="number" step="0.01"></div>
+<!-- EDITOR -->
+<section id="v-editor" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow" id="editorEyebrow">Nueva</div><h2 id="editorTitle">Factura</h2></div>
+    <button class="btn ghost" id="cancelEdit">← Volver</button></div>
+  <div class="panel">
+    <div class="grid">
+      <div class="field"><label for="f-number">Número</label><input id="f-number"></div>
+      <div class="field"><label for="f-date">Fecha de emisión</label><input id="f-date" type="date"></div>
+      <div class="field"><label for="f-due">Vencimiento</label><input id="f-due" type="date"></div>
+      <div class="field"><label for="f-status">Estado</label><select id="f-status"><option value="borrador">Borrador</option><option value="pendiente">Pendiente</option><option value="pagada">Pagada</option></select></div>
+      <div class="field"><label for="f-client">Cliente</label><select id="f-client"></select></div>
+      <div class="field"><label for="f-template">Diseño</label><select id="f-template"></select></div>
+      <div class="field"><label for="f-iva">IVA %</label><input id="f-iva" type="number" step="0.01"></div>
+      <div class="field"><label for="f-irpf">Retención IRPF %</label><input id="f-irpf" type="number" step="0.01"></div>
     </div>
   </div>
-  <div class="card">
-    <h3 style="margin-top:0">Conceptos</h3>
-    <div class="scroll"><table class="items"><thead><tr><th style="width:50%">Descripción</th><th>Cant.</th><th>Precio</th><th class="num">Importe</th><th></th></tr></thead><tbody id="itemsBody"></tbody></table></div>
-    <div class="toolbar" style="margin-top:8px"><button class="btn sec" id="addItem">+ Añadir línea</button><select id="quickItem" style="width:auto"><option value="">Añadir concepto guardado…</option></select></div>
-    <div id="editorTotals" style="text-align:right"></div>
-    <label style="margin-top:12px">Notas / forma de pago</label><textarea id="f-notes"></textarea>
+  <div class="panel stack">
+    <h3>Conceptos</h3>
+    <div class="scroll"><table class="items"><thead><tr><th style="width:55%">Descripción</th><th>Cant.</th><th>Precio</th><th class="num">Importe</th><th></th></tr></thead><tbody id="itemsBody"></tbody></table></div>
+    <div class="toolbar"><button class="btn ghost sm" id="addItem">+ Añadir línea</button><select id="quickItem" aria-label="Concepto guardado"><option value="">Añadir concepto guardado…</option></select></div>
+    <div class="totals-box" id="editorTotals"></div>
+    <div class="field"><label for="f-notes">Notas y forma de pago</label><textarea id="f-notes"></textarea></div>
   </div>
-  <div class="toolbar noprint">
-    <button class="btn" id="saveInvoice">Guardar</button>
-    <button class="btn sec" id="previewInvoice">Ver / Imprimir PDF</button>
-    <button class="btn sec" id="duplicateInvoice">Duplicar</button>
-    <button class="btn del" id="deleteInvoice">Eliminar</button>
-    <button class="btn sec" id="cancelEdit">Volver</button>
+  <div class="bar">
+    <div class="actions"><button class="btn" id="saveInvoice">Guardar</button><button class="btn ghost" id="previewInvoice">Vista previa y PDF</button><button class="btn ghost" id="duplicateInvoice">Duplicar</button></div>
+    <button class="btn danger" id="deleteInvoice">Eliminar factura</button>
   </div>
 </section>
 
 <!-- VISTA PREVIA -->
-<section id="v-preview" class="hidden">
-  <div class="toolbar noprint"><button class="btn" onclick="window.print()">Imprimir / Guardar PDF</button><button class="btn sec" id="backToEditor">Volver</button></div>
-  <div class="card"><div id="preview"></div></div>
+<section id="v-preview" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow">Vista previa</div><h2 id="previewTitle">Factura</h2></div>
+    <div class="actions"><button class="btn" id="pdfBtn">Descargar PDF</button><button class="btn ghost" id="backToEditor">← Volver</button></div></div>
+  <div class="paper-wrap"><div id="preview"></div></div>
 </section>
 
 <!-- CLIENTES -->
-<section id="v-clients" class="hidden">
-  <div class="card">
-    <h3 style="margin-top:0" id="clientFormTitle">Nuevo cliente</h3>
+<section id="v-clients" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow">Agenda</div><h2>Clientes</h2></div></div>
+  <div class="panel stack">
+    <h3 id="clientFormTitle">Nuevo cliente</h3>
     <input type="hidden" id="c-id">
-    <div class="row">
-      <div><label>Nombre / Razón social</label><input id="c-name"></div>
-      <div><label>NIF / CIF</label><input id="c-nif"></div>
-      <div><label>Email</label><input id="c-email" type="email"></div>
+    <div class="grid">
+      <div class="field"><label for="c-name">Nombre o razón social</label><input id="c-name"></div>
+      <div class="field"><label for="c-nif">NIF / CIF</label><input id="c-nif"></div>
+      <div class="field"><label for="c-email">Email</label><input id="c-email" type="email"></div>
+      <div class="field"><label for="c-address">Dirección</label><input id="c-address"></div>
+      <div class="field"><label for="c-city">CP y ciudad</label><input id="c-city"></div>
+      <div class="field"><label for="c-phone">Teléfono</label><input id="c-phone"></div>
     </div>
-    <div class="row" style="margin-top:12px">
-      <div><label>Dirección</label><input id="c-address"></div>
-      <div><label>CP y ciudad</label><input id="c-city"></div>
-      <div><label>Teléfono</label><input id="c-phone"></div>
-    </div>
-    <div class="toolbar" style="margin-top:12px"><button class="btn" id="saveClient">Guardar cliente</button><button class="btn sec" id="resetClient">Limpiar</button></div>
+    <div class="actions"><button class="btn" id="saveClient">Guardar cliente</button><button class="btn ghost" id="resetClient">Limpiar</button></div>
   </div>
-  <div class="card"><div class="scroll"><table id="clientTable"></table></div></div>
+  <div class="panel"><div class="scroll"><table id="clientTable"></table></div></div>
 </section>
 
 <!-- PLANTILLAS -->
-<section id="v-templates" class="hidden">
-  <div class="card">
-    <h3 style="margin-top:0">Diseños de factura</h3>
-    <p style="color:var(--muted);margin-top:0">Elige el diseño por defecto. También puedes cambiarlo en cada factura.</p>
-    <div class="row">
-      <div><label>Diseño por defecto</label><select id="t-default"></select></div>
-      <div><label>Color de marca</label><input id="t-color" type="color"></div>
+<section id="v-templates" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow">Diseño</div><h2>Plantillas</h2></div></div>
+  <div class="panel">
+    <h3>Aspecto de la factura</h3><p class="muted">El diseño por defecto para facturas nuevas. Puedes cambiarlo en cada factura.</p>
+    <div class="grid">
+      <div class="field"><label for="t-default">Diseño por defecto</label><select id="t-default"></select></div>
+      <div class="field"><label for="t-color">Color de marca</label><input id="t-color" type="color"></div>
     </div>
   </div>
-  <div class="card">
-    <h3 style="margin-top:0">Conceptos guardados</h3>
-    <p style="color:var(--muted);margin-top:0">Servicios que facturas a menudo (p. ej. "Clase de música 1h — 30 €").</p>
-    <div class="row"><div><label>Descripción</label><input id="p-desc"></div><div><label>Precio</label><input id="p-price" type="number" step="0.01"></div><div style="flex:0 0 auto;align-self:end"><button class="btn" id="addProduct">Añadir</button></div></div>
-    <div class="scroll"><table id="productTable" style="margin-top:12px"></table></div>
+  <div class="panel stack">
+    <div><h3>Conceptos guardados</h3><p class="muted" style="margin:0">Lo que facturas a menudo, para añadirlo con un clic.</p></div>
+    <div class="grid" style="align-items:end">
+      <div class="field" style="grid-column:span 2"><label for="p-desc">Descripción</label><input id="p-desc" placeholder="Clase de música, 1 hora"></div>
+      <div class="field"><label for="p-price">Precio (€)</label><input id="p-price" type="number" step="0.01" placeholder="30"></div>
+      <div><button class="btn" id="addProduct">Añadir</button></div>
+    </div>
+    <div class="scroll"><table id="productTable"></table></div>
   </div>
 </section>
 
 <!-- AJUSTES -->
-<section id="v-settings" class="hidden">
-  <div class="card">
-    <h3 style="margin-top:0">Mis datos (emisor)</h3>
-    <div class="row">
-      <div><label>Nombre / Razón social</label><input id="s-name"></div>
-      <div><label>NIF</label><input id="s-nif"></div>
-      <div><label>Email</label><input id="s-email"></div>
+<section id="v-settings" class="stack" hidden>
+  <div class="pagehead"><div><div class="eyebrow">Emisor</div><h2>Ajustes</h2></div></div>
+  <div class="panel stack">
+    <h3>Tus datos fiscales</h3>
+    <div class="grid">
+      <div class="field"><label for="s-name">Nombre o razón social</label><input id="s-name"></div>
+      <div class="field"><label for="s-nif">NIF</label><input id="s-nif"></div>
+      <div class="field"><label for="s-email">Email</label><input id="s-email"></div>
+      <div class="field"><label for="s-address">Dirección</label><input id="s-address"></div>
+      <div class="field"><label for="s-city">CP y ciudad</label><input id="s-city"></div>
+      <div class="field"><label for="s-phone">Teléfono</label><input id="s-phone"></div>
+      <div class="field"><label for="s-iban">IBAN</label><input id="s-iban"></div>
     </div>
-    <div class="row" style="margin-top:12px">
-      <div><label>Dirección</label><input id="s-address"></div>
-      <div><label>CP y ciudad</label><input id="s-city"></div>
-      <div><label>Teléfono</label><input id="s-phone"></div>
+    <h3>Facturación</h3>
+    <div class="grid">
+      <div class="field"><label for="s-prefix">Prefijo de numeración</label><input id="s-prefix" placeholder="2026-"></div>
+      <div class="field"><label for="s-iva">IVA por defecto %</label><input id="s-iva" type="number" step="0.01"></div>
+      <div class="field"><label for="s-irpf">IRPF por defecto %</label><input id="s-irpf" type="number" step="0.01"></div>
+      <div class="field"><label for="s-days">Días hasta vencimiento</label><input id="s-days" type="number"></div>
     </div>
-    <div class="row" style="margin-top:12px">
-      <div><label>IBAN</label><input id="s-iban"></div>
-      <div><label>Prefijo numeración</label><input id="s-prefix" placeholder="2026-"></div>
-      <div><label>IVA por defecto %</label><input id="s-iva" type="number" step="0.01"></div>
-      <div><label>IRPF por defecto %</label><input id="s-irpf" type="number" step="0.01"></div>
-      <div><label>Días hasta vencimiento</label><input id="s-days" type="number"></div>
-    </div>
-    <label style="margin-top:12px">Logo (opcional)</label><input id="s-logo" type="file" accept="image/*">
-    <label style="margin-top:12px">Nota por defecto en facturas</label><textarea id="s-notes"></textarea>
-    <div class="toolbar" style="margin-top:12px"><button class="btn" id="saveSettings">Guardar ajustes</button><button class="btn sec" id="removeLogo">Quitar logo</button></div>
+    <div class="field"><label for="s-notes">Nota por defecto en facturas</label><textarea id="s-notes"></textarea></div>
+    <div class="field"><label for="s-logo">Logo</label><input id="s-logo" type="file" accept="image/*"></div>
+    <div class="actions"><button class="btn" id="saveSettings">Guardar ajustes</button><button class="btn ghost" id="removeLogo">Quitar logo</button></div>
   </div>
-  <div class="card">
-    <h3 style="margin-top:0">Copia de seguridad</h3>
-    <p style="color:var(--muted);margin-top:0">Los datos se guardan solo en este dispositivo. Descarga una copia de vez en cuando.</p>
-    <div class="toolbar"><button class="btn" id="backup">Descargar copia (.json)</button><label class="btn sec" style="margin:0;color:var(--text);font-size:inherit">Restaurar copia<input type="file" id="restore" accept=".json" class="hidden"></label></div>
+  <div class="panel stack">
+    <div><h3>Copia de seguridad</h3><p class="muted" style="margin:0">Además de Drive, puedes guardar una copia en un archivo.</p></div>
+    <div class="actions"><button class="btn ghost" id="backup">Descargar copia (.json)</button>
+      <label class="btn ghost" for="restore">Restaurar copia</label><input type="file" id="restore" accept=".json" hidden></div>
   </div>
 </section>
-</main>
+
+</div></main>
+</div>
+
+<div id="modal" hidden><div class="box"><p id="modalText"></p><div class="actions" style="justify-content:flex-end"><button class="btn ghost" id="modalNo">Cancelar</button><button class="btn" id="modalYes">Aceptar</button></div></div></div>
+<div id="toast" role="status"></div>
 
 <script>
 const KEY = 'misFacturas.v1';
@@ -225,10 +331,22 @@ const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+Number(n
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const fmtDate = d => d ? new Date(d+'T00:00').toLocaleDateString('es-ES') : '';
 
+/* ---------- Avisos y confirmaciones (el visor no muestra alert/confirm) ---------- */
+let toastTimer;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('on'), 2600); }
+function ask(msg, yes='Aceptar'){
+  return new Promise(res => {
+    $('#modalText').textContent = msg; $('#modalYes').textContent = yes; $('#modal').hidden = false; $('#modalYes').focus();
+    const done = v => { $('#modal').hidden = true; $('#modalYes').onclick = $('#modalNo').onclick = null; res(v); };
+    $('#modalYes').onclick = () => done(true); $('#modalNo').onclick = () => done(false);
+  });
+}
+
+/* ---------- Datos ---------- */
 let db = load();
 function load(){
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) return d; } catch(e){}
-  return {settings:{iva:21, irpf:15, days:30, prefix:new Date().getFullYear()+'-', template:'moderna', color:'#1f3a5f', notes:''}, clients:[], invoices:[], products:[]};
+  return {settings:{iva:21, irpf:15, days:30, prefix:new Date().getFullYear()+'-', template:'moderna', color:'#24463c', notes:''}, clients:[], invoices:[], products:[]};
 }
 function saveLocal(){ try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){} }
 function save(){ db.updatedAt = Date.now(); saveLocal(); schedulePush(); }
@@ -236,11 +354,10 @@ function save(){ db.updatedAt = Date.now(); saveLocal(); schedulePush(); }
 /* ---------- Sincronización con Google Drive ---------- */
 const DRIVE = 'Google Drive', FILE = 'mis-facturas-datos.json';
 let mcp = null, driveId = null, pushTimer = null, pushing = false, pendingPush = false;
-function syncStatus(text, retry){
-  const el = $('#sync'); el.textContent = text;
-  if (retry) { const b = document.createElement('button'); b.textContent = 'Reintentar';
-    b.style.cssText = 'background:#fff;color:var(--accent);border:0;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px';
-    b.onclick = retry; el.append(b); }
+function syncStatus(text, state='', retry){
+  const el = $('#sync'); el.className = state; el.innerHTML = '<span class="dot"></span>';
+  el.append(document.createTextNode(text));
+  if (retry) { const b = document.createElement('button'); b.className = 'btn ghost sm'; b.textContent = 'Reintentar'; b.onclick = retry; el.append(b); }
 }
 function driveError(e, retry){
   const msg = {
@@ -251,8 +368,8 @@ function driveError(e, retry){
     approval_required: 'Falta tu permiso para usar Drive',
     blocked_by_policy: 'Tu organización no permite usar Drive aquí',
     server_unavailable: 'Drive no responde ahora mismo',
-  }[e?.code] || 'Error con Drive';
-  syncStatus('⚠️ '+msg+' · datos guardados en este dispositivo', retry);
+  }[e?.code] || 'No se pudo conectar con Drive';
+  syncStatus(msg + '. Tus datos están guardados en este dispositivo.', 'warn', retry);
 }
 const b64ToText = b => new TextDecoder().decode(Uint8Array.from(atob(b), c=>c.charCodeAt(0)));
 async function findDriveFiles(){
@@ -260,38 +377,38 @@ async function findDriveFiles(){
   return ((r.payload && r.payload.files) || []).sort((a,b)=>(b.modifiedTime||'').localeCompare(a.modifiedTime||''));
 }
 async function pullFromDrive(){
-  syncStatus('☁️ Cargando de Drive…');
+  syncStatus('Cargando de Drive…', 'busy');
   try {
     const files = await findDriveFiles();
-    if (!files.length) { driveId = null; if (db.invoices.length || db.clients.length) await pushToDrive(); else syncStatus('☁️ Drive conectado'); return; }
+    if (!files.length) { driveId = null; if (db.invoices.length || db.clients.length) await pushToDrive(); else syncStatus('Conectado a Drive', 'ok'); return; }
     driveId = files[0].id;
     const r = await mcp.callTool(DRIVE, 'download_file_content', {fileId: driveId}, {cache:false});
     const remote = JSON.parse(b64ToText(r.payload.content));
     if (!remote.invoices || !remote.settings) throw {code:'bad_file'};
-    if ((remote.updatedAt||0) >= (db.updatedAt||0)) { db = remote; saveLocal(); show(currentView); syncStatus('☁️ Sincronizado con Drive'); }
+    if ((remote.updatedAt||0) >= (db.updatedAt||0)) { db = remote; saveLocal(); show(currentView); syncStatus('Sincronizado con Drive', 'ok'); }
     else await pushToDrive();
   } catch(e) { driveError(e, pullFromDrive); }
 }
-function schedulePush(){ if (!mcp) return; clearTimeout(pushTimer); syncStatus('☁️ Cambios sin subir…'); pushTimer = setTimeout(pushToDrive, 2500); }
+function schedulePush(){ if (!mcp) return; clearTimeout(pushTimer); syncStatus('Cambios pendientes de subir', 'busy'); pushTimer = setTimeout(pushToDrive, 2500); }
 async function pushToDrive(){
   if (!mcp) return;
   if (pushing) { pendingPush = true; return; }
-  pushing = true; syncStatus('☁️ Guardando en Drive…');
+  pushing = true; syncStatus('Guardando en Drive…', 'busy');
   try {
     const r = await mcp.callTool(DRIVE, 'create_file', {title: FILE, textContent: JSON.stringify(db),
       contentMimeType: 'application/json', disableConversionToGoogleType: true});
     const p = r.payload || {}, newId = p.id || p.file?.id;
     const old = driveId; driveId = newId || driveId;
     if (old && newId && old !== newId) { try { await mcp.callTool(DRIVE, 'trash_file', {fileId: old}); } catch(e){} }
-    syncStatus('☁️ Guardado en Drive ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+    syncStatus('Guardado en Drive a las ' + new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}), 'ok');
   } catch(e) { driveError(e, pushToDrive); }
   pushing = false;
   if (pendingPush) { pendingPush = false; pushToDrive(); }
 }
+syncStatus('Guardado en este dispositivo');
 (async () => {
   try { mcp = window.claude?.use ? await window.claude.use('mcp') : null; } catch(e){ mcp = null; }
-  if (!mcp) { syncStatus('💾 Guardado en este dispositivo'); return; }
-  pullFromDrive();
+  if (mcp) pullFromDrive();
 })();
 
 /* ---------- Cálculos ---------- */
@@ -301,6 +418,7 @@ function totals(inv){
   return {base, iva, irpf, total: base+iva-irpf};
 }
 function status(inv){ return inv.status==='pendiente' && inv.due && inv.due < today() ? 'vencida' : inv.status; }
+const tag = inv => `<span class="tag ${status(inv)}">${status(inv)}</span>`;
 function nextNumber(){
   const p = db.settings.prefix||'';
   const nums = db.invoices.filter(i=>i.number.startsWith(p)).map(i=>parseInt(i.number.slice(p.length))||0);
@@ -313,9 +431,9 @@ const years = () => [...new Set([new Date().getFullYear(), ...db.invoices.map(i=
 let currentView = 'dashboard';
 function show(view){
   if (view !== 'editor' && view !== 'preview') currentView = view;
-  document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));
-  $('#v-'+view).classList.remove('hidden');
-  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
+  document.querySelectorAll('.wrap>section').forEach(s=>s.hidden = true);
+  $('#v-'+view).hidden = false;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on', b.dataset.view===(view==='editor'||view==='preview'?'invoices':view)));
   ({dashboard:renderDashboard, invoices:renderInvoices, clients:renderClients, templates:renderTemplates, settings:renderSettings}[view]||(()=>{}))();
   window.scrollTo(0,0);
 }
@@ -325,21 +443,21 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.
 function renderDashboard(){
   const sel = $('#dashYear'), cur = sel.value || new Date().getFullYear();
   sel.innerHTML = years().map(y=>`<option ${y==cur?'selected':''}>${y}</option>`).join('');
-  sel.onchange = renderDashboard;
+  sel.onchange = renderDashboard; $('#dashYearLabel').textContent = sel.value;
   const list = db.invoices.filter(i=>i.date.startsWith(sel.value) && i.status!=='borrador');
   const sum = (arr,k) => arr.reduce((s,i)=>s+totals(i)[k],0);
   const paid = list.filter(i=>i.status==='pagada'), pend = list.filter(i=>i.status==='pendiente');
-  const q = n => list.filter(i=>Math.ceil(+i.date.slice(5,7)/3)===n);
   $('#stats').innerHTML = [
-    ['Facturado (base)', money(sum(list,'base'))], ['IVA repercutido', money(sum(list,'iva'))],
-    ['IRPF retenido', money(sum(list,'irpf'))], ['Cobrado', money(sum(paid,'total'))],
-    ['Pendiente', money(sum(pend,'total'))],
-    ...[1,2,3,4].map(n=>[`T${n} base / IVA`, `${money(sum(q(n),'base'))}<small style="font-size:13px;color:var(--muted)"> / ${money(sum(q(n),'iva'))}</small>`])
-  ].map(([t,v])=>`<div class="stat card" style="margin:0;background:var(--bg)"><span>${t}</span><b>${v}</b></div>`).join('');
+    ['Facturado (base)', money(sum(list,'base')), 'lead'], ['Cobrado', money(sum(paid,'total'))],
+    ['Pendiente de cobro', money(sum(pend,'total'))], ['IVA repercutido', money(sum(list,'iva'))], ['IRPF retenido', money(sum(list,'irpf'))]
+  ].map(([t,v,c])=>`<div class="kpi ${c||''}"><span class="eyebrow">${t}</span><b>${v}</b></div>`).join('');
+  const q = n => list.filter(i=>Math.ceil(+i.date.slice(5,7)/3)===n);
+  $('#quarterTable').innerHTML = `<thead><tr><th></th><th class="num">Base</th><th class="num">IVA</th><th class="num">IRPF</th></tr></thead><tbody>`+
+    [1,2,3,4].map(n=>`<tr><td><b>${n}T</b></td><td class="num">${money(sum(q(n),'base'))}</td><td class="num">${money(sum(q(n),'iva'))}</td><td class="num">${money(sum(q(n),'irpf'))}</td></tr>`).join('')+'</tbody>';
   const p = db.invoices.filter(i=>i.status==='pendiente').sort((a,b)=>(a.due||'').localeCompare(b.due||''));
-  $('#pendingTable').innerHTML = p.length ? `<tr><th>Nº</th><th>Cliente</th><th>Vence</th><th>Estado</th><th class="num">Total</th></tr>`+
-    p.map(i=>`<tr style="cursor:pointer" onclick="edit('${i.id}')"><td>${esc(i.number)}</td><td>${esc(clientName(i.client))}</td><td>${fmtDate(i.due)}</td><td><span class="tag ${status(i)}">${status(i)}</span></td><td class="num">${money(totals(i).total)}</td></tr>`).join('')
-    : '<tr><td style="color:var(--muted)">Nada pendiente 🎉</td></tr>';
+  $('#pendingTable').innerHTML = p.length ? `<thead><tr><th>Nº</th><th>Cliente</th><th>Vence</th><th></th><th class="num">Total</th></tr></thead><tbody>`+
+    p.map(i=>`<tr class="link" onclick="edit('${i.id}')"><td>${esc(i.number)}</td><td>${esc(clientName(i.client))}</td><td class="num">${fmtDate(i.due)}</td><td>${tag(i)}</td><td class="num">${money(totals(i).total)}</td></tr>`).join('')+'</tbody>'
+    : '<tbody><tr><td class="empty">No tienes nada pendiente de cobro.</td></tr></tbody>';
 }
 
 /* ---------- Lista de facturas ---------- */
@@ -351,15 +469,14 @@ function renderInvoices(){
     (!st || status(i)===st) && (!fy.value || i.date.startsWith(fy.value)) &&
     (!q || [i.number, clientName(i.client), ...i.items.map(x=>x.desc)].join(' ').toLowerCase().includes(q))
   ).sort((a,b)=>b.date.localeCompare(a.date)||b.number.localeCompare(a.number));
-  $('#invoiceTable').innerHTML = `<tr><th>Nº</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th class="num">Total</th><th></th></tr>`+
-    (list.map(i=>`<tr><td>${esc(i.number)}</td><td>${fmtDate(i.date)}</td><td>${esc(clientName(i.client))}</td>
-      <td><span class="tag ${status(i)}">${status(i)}</span></td><td class="num">${money(totals(i).total)}</td>
-      <td class="num"><button class="btn sec" onclick="edit('${i.id}')">Abrir</button>
-      ${i.status!=='pagada'?`<button class="btn sec" onclick="markPaid('${i.id}')">✓ Cobrada</button>`:''}</td></tr>`).join('')
-    || '<tr><td colspan="6" style="color:var(--muted)">No hay facturas todavía.</td></tr>');
+  $('#invoiceTable').innerHTML = `<thead><tr><th>Nº</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th class="num">Total</th><th></th></tr></thead><tbody>`+
+    (list.map(i=>`<tr class="link" onclick="edit('${i.id}')"><td><b>${esc(i.number)}</b></td><td class="num">${fmtDate(i.date)}</td><td>${esc(clientName(i.client))}</td>
+      <td>${tag(i)}</td><td class="num">${money(totals(i).total)}</td>
+      <td class="num">${i.status!=='pagada'?`<button class="btn ghost sm" onclick="event.stopPropagation();markPaid('${i.id}')">Marcar cobrada</button>`:''}</td></tr>`).join('')
+    || `<tr><td colspan="6" class="empty">${db.invoices.length ? 'Ninguna factura coincide con la búsqueda.' : 'Aún no hay facturas. Crea la primera con «Nueva factura».'}</td></tr>`)+'</tbody>';
 }
 ['#search','#filterStatus','#filterYear'].forEach(s=>$(s).oninput=renderInvoices);
-window.markPaid = id => { const i = db.invoices.find(x=>x.id===id); i.status='pagada'; i.paidOn=today(); save(); renderInvoices(); };
+window.markPaid = id => { const i = db.invoices.find(x=>x.id===id); i.status='pagada'; i.paidOn=today(); save(); renderInvoices(); toast(`Factura ${i.number} marcada como cobrada`); };
 $('#exportCsv').onclick = () => {
   const rows = [['Numero','Fecha','Vencimiento','Cliente','NIF','Base','IVA','IRPF','Total','Estado']];
   db.invoices.forEach(i=>{ const t=totals(i), c=db.clients.find(x=>x.id===i.client)||{};
@@ -374,69 +491,79 @@ function newInvoice(){
   return {id:uid(), number:nextNumber(), date:today(), due:addDays(today(), s.days), status:'borrador', client:db.clients[0]?.id||'',
     template:s.template, iva:s.iva, irpf:s.irpf, notes:s.notes||'', items:[{desc:'',qty:1,price:0}]};
 }
-$('#newInvoice').onclick = () => openEditor(newInvoice(), true);
+document.querySelectorAll('[data-new]').forEach(b=>b.onclick = () => openEditor(newInvoice(), true));
 window.edit = id => openEditor(structuredClone(db.invoices.find(i=>i.id===id)), false);
+const EF = ['number','date','due','status','client','template','iva','irpf','notes'];
 function openEditor(inv, isNew){
   current = inv; current._new = isNew;
   show('editor');
-  $('#editorTitle').textContent = isNew ? 'Nueva factura' : 'Factura '+inv.number;
-  $('#deleteInvoice').classList.toggle('hidden', isNew);
-  $('#f-client').innerHTML = '<option value="">— Sin cliente —</option>'+db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  $('#editorEyebrow').textContent = isNew ? 'Nueva factura' : 'Editar factura';
+  $('#editorTitle').textContent = 'Nº ' + inv.number;
+  $('#deleteInvoice').hidden = isNew;
+  $('#f-client').innerHTML = '<option value="">Sin cliente</option>'+db.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
   $('#f-template').innerHTML = Object.entries(TEMPLATES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-  $('#quickItem').innerHTML = '<option value="">Añadir concepto guardado…</option>'+db.products.map((p,i)=>`<option value="${i}">${esc(p.desc)} — ${money(p.price)}</option>`).join('');
-  for (const k of ['number','date','due','status','client','template','iva','irpf','notes']) $('#f-'+k).value = inv[k] ?? '';
+  $('#quickItem').innerHTML = '<option value="">Añadir concepto guardado…</option>'+db.products.map((p,i)=>`<option value="${i}">${esc(p.desc)} · ${money(p.price)}</option>`).join('');
+  EF.forEach(k => $('#f-'+k).value = inv[k] ?? '');
   renderItems();
 }
-function readEditor(){ for (const k of ['number','date','due','status','client','template','iva','irpf','notes']) current[k] = $('#f-'+k).value; }
+function readEditor(){ EF.forEach(k => current[k] = $('#f-'+k).value); }
 function renderItems(){
   $('#itemsBody').innerHTML = current.items.map((it,n)=>`<tr>
-    <td><input value="${esc(it.desc)}" oninput="setItem(${n},'desc',this.value)"></td>
-    <td><input type="number" step="any" value="${it.qty}" oninput="setItem(${n},'qty',this.value)" style="width:70px"></td>
-    <td><input type="number" step="0.01" value="${it.price}" oninput="setItem(${n},'price',this.value)" style="width:100px"></td>
+    <td><input id="it-d${n}" value="${esc(it.desc)}" placeholder="Concepto" oninput="setItem(${n},'desc',this.value)"></td>
+    <td><input id="it-q${n}" type="number" step="any" value="${it.qty}" oninput="setItem(${n},'qty',this.value)" style="width:72px"></td>
+    <td><input id="it-p${n}" type="number" step="0.01" value="${it.price}" oninput="setItem(${n},'price',this.value)" style="width:104px"></td>
     <td class="num" id="amt${n}">${money(it.qty*it.price)}</td>
-    <td><button class="btn del" onclick="removeItem(${n})">✕</button></td></tr>`).join('');
+    <td><button class="iconbtn" title="Quitar línea" aria-label="Quitar línea" onclick="removeItem(${n})">×</button></td></tr>`).join('');
   updateTotals();
 }
 window.setItem = (n,k,v) => { current.items[n][k] = k==='desc'?v:Number(v); $('#amt'+n).textContent = money(current.items[n].qty*current.items[n].price); updateTotals(); };
 window.removeItem = n => { current.items.splice(n,1); renderItems(); };
 function updateTotals(){
   readEditor(); const t = totals(current);
-  $('#editorTotals').innerHTML = `Base: <b>${money(t.base)}</b> · IVA: <b>${money(t.iva)}</b> · IRPF: <b>-${money(t.irpf)}</b> · <span style="font-size:18px">Total: <b>${money(t.total)}</b></span>`;
+  $('#editorTotals').innerHTML = `<div><span class="muted">Base imponible</span><span>${money(t.base)}</span></div>
+    <div><span class="muted">IVA (${current.iva||0}%)</span><span>${money(t.iva)}</span></div>
+    <div><span class="muted">Retención IRPF (${current.irpf||0}%)</span><span>−${money(t.irpf)}</span></div>
+    <div class="grand"><span>Total</span><span>${money(t.total)}</span></div>`;
 }
 ['#f-iva','#f-irpf'].forEach(s=>$(s).oninput=updateTotals);
+$('#f-number').oninput = e => $('#editorTitle').textContent = 'Nº ' + e.target.value;
 $('#addItem').onclick = () => { current.items.push({desc:'',qty:1,price:0}); renderItems(); };
 $('#quickItem').onchange = e => { const p = db.products[e.target.value]; if (p) { current.items.push({desc:p.desc,qty:1,price:p.price}); renderItems(); } e.target.value=''; };
 $('#saveInvoice').onclick = () => {
   readEditor();
-  if (!current.number.trim()) return alert('Pon un número de factura.');
-  if (db.invoices.some(i=>i.number===current.number && i.id!==current.id)) return alert('Ya existe una factura con ese número.');
+  if (!current.number.trim()) return toast('Pon un número de factura antes de guardar.');
+  if (db.invoices.some(i=>i.number===current.number && i.id!==current.id)) return toast(`Ya existe una factura con el número ${current.number}.`);
   const {_new, ...inv} = current;
   const idx = db.invoices.findIndex(i=>i.id===inv.id);
   idx>=0 ? db.invoices[idx]=inv : db.invoices.push(inv);
-  save(); current._new = false; show('invoices');
+  save(); toast(`Factura ${inv.number} guardada`); show('invoices');
 };
 $('#duplicateInvoice').onclick = () => { readEditor(); const c = structuredClone(current);
-  Object.assign(c, {id:uid(), number:nextNumber(), date:today(), due:addDays(today(), db.settings.days), status:'borrador'}); openEditor(c, true); };
-$('#deleteInvoice').onclick = () => { if (confirm('¿Eliminar esta factura?')) { db.invoices = db.invoices.filter(i=>i.id!==current.id); save(); show('invoices'); } };
+  Object.assign(c, {id:uid(), number:nextNumber(), date:today(), due:addDays(today(), db.settings.days), status:'borrador'}); openEditor(c, true); toast('Copia creada. Guárdala para conservarla.'); };
+$('#deleteInvoice').onclick = async () => {
+  if (await ask(`¿Eliminar la factura ${current.number}? No se puede deshacer.`, 'Eliminar')) {
+    db.invoices = db.invoices.filter(i=>i.id!==current.id); save(); toast('Factura eliminada'); show('invoices'); }
+};
 $('#cancelEdit').onclick = () => show('invoices');
 $('#previewInvoice').onclick = () => { readEditor(); renderPreview(current); show('preview'); };
-$('#backToEditor').onclick = () => { document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden')); $('#v-editor').classList.remove('hidden'); };
+$('#backToEditor').onclick = () => { document.querySelectorAll('.wrap>section').forEach(s=>s.hidden = true); $('#v-editor').hidden = false; window.scrollTo(0,0); };
 
-/* ---------- Vista imprimible ---------- */
+/* ---------- Factura ---------- */
 const lines = arr => arr.filter(Boolean).map(x=>'<br>'+esc(x)).join('');
 function renderPreview(inv){
   const s = db.settings, c = db.clients.find(x=>x.id===inv.client)||{}, t = totals(inv);
-  const el = $('#preview'); el.className = 't-'+(inv.template||'moderna'); el.style.setProperty('--brand', s.color||'#1f3a5f');
-  const accent = inv.template==='moderna' ? '' : `style="color:${esc(s.color)}"`;
+  const el = $('#preview'); el.className = 't-'+(inv.template||'moderna'); el.style.setProperty('--brand', s.color||'#24463c');
+  const tint = inv.template==='moderna' ? '' : `style="color:${esc(s.color)}"`;
+  $('#previewTitle').textContent = 'Factura ' + inv.number;
   el.innerHTML = `
-    <div class="head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
-      <div>${s.logo?`<img src="${s.logo}" style="max-height:60px;max-width:180px;display:block;margin-bottom:8px">`:''}
-        <h2 ${accent}>FACTURA</h2><div>Nº ${esc(inv.number)}</div></div>
-      <div style="text-align:right"><b>${esc(s.name)}</b>${lines([s.nif,s.address,s.city,[s.email,s.phone].filter(Boolean).join(' · ')])}</div>
+    <div class="head">
+      <div>${s.logo?`<img src="${s.logo}" alt="" style="max-height:56px;max-width:180px;display:block;margin-bottom:14px">`:''}
+        <h2 ${tint}>Factura</h2><div class="num-big">Nº ${esc(inv.number)}</div></div>
+      <div class="from"><b>${esc(s.name||'Tu nombre')}</b>${lines([s.nif,s.address,s.city,[s.email,s.phone].filter(Boolean).join(' · ')])}</div>
     </div>
     <div class="meta">
-      <div><small>FACTURAR A</small><br><b>${esc(c.name||'')}</b>${lines([c.nif,c.address,c.city,c.email])}</div>
-      <div style="text-align:right"><small>FECHA</small><br>${fmtDate(inv.date)}<br><small>VENCIMIENTO</small><br>${fmtDate(inv.due)}</div>
+      <div><div class="lab">Facturar a</div><b>${esc(c.name||'—')}</b>${lines([c.nif,c.address,c.city,c.email])}</div>
+      <div style="text-align:right"><div class="lab">Fecha de emisión</div>${fmtDate(inv.date)}<div class="lab" style="margin-top:12px">Vencimiento</div>${fmtDate(inv.due)}</div>
     </div>
     <table><thead><tr><th>Concepto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Importe</th></tr></thead><tbody>
       ${inv.items.map(i=>`<tr><td>${esc(i.desc)}</td><td class="num">${i.qty}</td><td class="num">${money(i.price)}</td><td class="num">${money(i.qty*i.price)}</td></tr>`).join('')}
@@ -444,66 +571,89 @@ function renderPreview(inv){
     <div class="totals">
       <div><span>Base imponible</span><span>${money(t.base)}</span></div>
       <div><span>IVA (${inv.iva}%)</span><span>${money(t.iva)}</span></div>
-      ${Number(inv.irpf)?`<div><span>Retención IRPF (${inv.irpf}%)</span><span>-${money(t.irpf)}</span></div>`:''}
-      <div class="grand"><span>TOTAL</span><span>${money(t.total)}</span></div>
+      ${Number(inv.irpf)?`<div><span>Retención IRPF (${inv.irpf}%)</span><span>−${money(t.irpf)}</span></div>`:''}
+      <div class="grand"><span>Total</span><span>${money(t.total)}</span></div>
     </div>
-    <div class="notes">${s.iban?`IBAN: ${esc(s.iban)}\n`:''}${esc(inv.notes)}</div>`;
-  document.title = `Factura ${inv.number}`;
+    ${(s.iban||inv.notes)?`<div class="notes">${s.iban?`<div class="lab">Forma de pago</div>Transferencia a ${esc(s.iban)}\n\n`:''}${esc(inv.notes)}</div>`:''}`;
 }
-window.addEventListener('afterprint', ()=>document.title='Mis Facturas');
+
+/* ---------- PDF ---------- */
+function loadPdfLib(){
+  if (window.html2pdf) return Promise.resolve();
+  return new Promise((res, rej) => { const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    sc.onload = res; sc.onerror = rej; document.head.append(sc); });
+}
+$('#pdfBtn').onclick = async () => {
+  const btn = $('#pdfBtn'); btn.disabled = true; btn.textContent = 'Generando…';
+  try {
+    await loadPdfLib();
+    const blob = await html2pdf().set({margin:0, image:{type:'jpeg',quality:.97},
+      html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true}, jsPDF:{unit:'px', format:[794,1123], hotfixes:['px_scaling']}})
+      .from($('#preview')).outputPdf('blob');
+    await download(`Factura ${current.number}.pdf`, blob, 'application/pdf');
+  } catch(e) { toast('No se pudo generar el PDF. Comprueba tu conexión e inténtalo de nuevo.'); }
+  btn.disabled = false; btn.textContent = 'Descargar PDF';
+};
 
 /* ---------- Clientes ---------- */
 const CF = ['id','name','nif','email','address','city','phone'];
 function renderClients(){
-  $('#clientTable').innerHTML = `<tr><th>Nombre</th><th>NIF</th><th>Email</th><th class="num">Facturado</th><th></th></tr>`+
-    (db.clients.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.nif)}</td><td>${esc(c.email)}</td>
+  $('#clientTable').innerHTML = `<thead><tr><th>Nombre</th><th>NIF</th><th>Email</th><th class="num">Facturado</th><th></th></tr></thead><tbody>`+
+    (db.clients.map(c=>`<tr class="link" onclick="editClient('${c.id}')"><td><b>${esc(c.name)}</b></td><td>${esc(c.nif)}</td><td>${esc(c.email)}</td>
       <td class="num">${money(db.invoices.filter(i=>i.client===c.id).reduce((s,i)=>s+totals(i).total,0))}</td>
-      <td class="num"><button class="btn sec" onclick="editClient('${c.id}')">Editar</button> <button class="btn del" onclick="delClient('${c.id}')">✕</button></td></tr>`).join('')
-    || '<tr><td colspan="5" style="color:var(--muted)">Aún no hay clientes.</td></tr>');
+      <td class="num"><button class="iconbtn" title="Eliminar cliente" aria-label="Eliminar cliente" onclick="event.stopPropagation();delClient('${c.id}')">×</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="empty">Aún no hay clientes. Añade el primero con el formulario de arriba.</td></tr>')+'</tbody>';
 }
 window.editClient = id => { const c = db.clients.find(x=>x.id===id); CF.forEach(k=>$('#c-'+k).value=c[k]||''); $('#clientFormTitle').textContent='Editar cliente'; window.scrollTo(0,0); };
-window.delClient = id => {
-  if (db.invoices.some(i=>i.client===id)) return alert('Este cliente tiene facturas; no se puede borrar.');
-  if (confirm('¿Eliminar cliente?')) { db.clients = db.clients.filter(c=>c.id!==id); save(); renderClients(); }
+window.delClient = async id => {
+  if (db.invoices.some(i=>i.client===id)) return toast('Este cliente tiene facturas, así que no se puede eliminar.');
+  if (await ask(`¿Eliminar a ${clientName(id)}?`, 'Eliminar')) { db.clients = db.clients.filter(c=>c.id!==id); save(); renderClients(); toast('Cliente eliminado'); }
 };
-$('#resetClient').onclick = () => { CF.forEach(k=>$('#c-'+k).value=''); $('#clientFormTitle').textContent='Nuevo cliente'; };
+function resetClient(){ CF.forEach(k=>$('#c-'+k).value=''); $('#clientFormTitle').textContent='Nuevo cliente'; }
+$('#resetClient').onclick = resetClient;
 $('#saveClient').onclick = () => {
   const c = {}; CF.forEach(k=>c[k]=$('#c-'+k).value.trim());
-  if (!c.name) return alert('El nombre es obligatorio.');
+  if (!c.name) return toast('Escribe el nombre del cliente.');
   if (c.id) Object.assign(db.clients.find(x=>x.id===c.id), c); else { c.id = uid(); db.clients.push(c); }
-  save(); $('#resetClient').onclick(); renderClients();
+  save(); resetClient(); renderClients(); toast(`${c.name} guardado`);
 };
 
 /* ---------- Plantillas y conceptos ---------- */
 function renderTemplates(){
   $('#t-default').innerHTML = Object.entries(TEMPLATES).map(([k,v])=>`<option value="${k}" ${k===db.settings.template?'selected':''}>${v}</option>`).join('');
-  $('#t-color').value = db.settings.color || '#1f3a5f';
-  $('#productTable').innerHTML = db.products.map((p,i)=>`<tr><td>${esc(p.desc)}</td><td class="num">${money(p.price)}</td><td class="num"><button class="btn del" onclick="delProduct(${i})">✕</button></td></tr>`).join('');
+  $('#t-color').value = db.settings.color || '#24463c';
+  $('#productTable').innerHTML = db.products.length ? `<thead><tr><th>Concepto</th><th class="num">Precio</th><th></th></tr></thead><tbody>`+
+    db.products.map((p,i)=>`<tr><td>${esc(p.desc)}</td><td class="num">${money(p.price)}</td><td class="num"><button class="iconbtn" aria-label="Quitar" onclick="delProduct(${i})">×</button></td></tr>`).join('')+'</tbody>'
+    : '<tbody><tr><td class="empty">Sin conceptos guardados todavía.</td></tr></tbody>';
 }
-$('#t-default').onchange = e => { db.settings.template = e.target.value; save(); };
-$('#t-color').oninput = e => { db.settings.color = e.target.value; save(); };
-$('#addProduct').onclick = () => { const desc = $('#p-desc').value.trim(); if (!desc) return;
+$('#t-default').onchange = e => { db.settings.template = e.target.value; save(); toast('Diseño por defecto actualizado'); };
+$('#t-color').onchange = e => { db.settings.color = e.target.value; save(); };
+$('#addProduct').onclick = () => { const desc = $('#p-desc').value.trim(); if (!desc) return toast('Escribe una descripción.');
   db.products.push({desc, price:Number($('#p-price').value)||0}); $('#p-desc').value=$('#p-price').value=''; save(); renderTemplates(); };
 window.delProduct = i => { db.products.splice(i,1); save(); renderTemplates(); };
 
 /* ---------- Ajustes ---------- */
 const SF = ['name','nif','email','address','city','phone','iban','prefix','iva','irpf','days','notes'];
 function renderSettings(){ SF.forEach(k=>$('#s-'+k).value = db.settings[k] ?? ''); }
-$('#saveSettings').onclick = () => { SF.forEach(k=>db.settings[k] = ['iva','irpf','days'].includes(k) ? Number($('#s-'+k).value) : $('#s-'+k).value); save(); alert('Ajustes guardados'); };
+$('#saveSettings').onclick = () => { SF.forEach(k=>db.settings[k] = ['iva','irpf','days'].includes(k) ? Number($('#s-'+k).value) : $('#s-'+k).value); save(); toast('Ajustes guardados'); };
 $('#s-logo').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader();
-  r.onload = () => { db.settings.logo = r.result; save(); alert('Logo guardado'); }; r.readAsDataURL(f); };
-$('#removeLogo').onclick = () => { delete db.settings.logo; save(); alert('Logo eliminado'); };
+  r.onload = () => { db.settings.logo = r.result; save(); toast('Logo guardado'); }; r.readAsDataURL(f); };
+$('#removeLogo').onclick = () => { delete db.settings.logo; save(); toast('Logo quitado'); };
+
 async function download(name, content, type){
-  try { const dl = window.claude?.use ? await window.claude.use('downloads') : null;
-    if (dl) { try { await dl.save({filename:name, data:new Blob([content],{type})}); } catch(e){} return; } } catch(e){}
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([content],{type})); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000); }
-$('#backup').onclick = () => download(`facturas-backup-${today()}.json`, JSON.stringify(db,null,2), 'application/json');
+  const blob = content instanceof Blob ? content : new Blob([content],{type});
+  let dl = null;
+  try { dl = window.claude?.use ? await window.claude.use('downloads') : null; } catch(e){}
+  if (dl) { try { await dl.save({filename:name, data:blob}); } catch(e){} return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+$('#backup').onclick = () => download(`facturas-copia-${today()}.json`, JSON.stringify(db,null,2), 'application/json');
 $('#restore').onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader();
-  r.onload = () => { try { const d = JSON.parse(r.result); if (!d.invoices||!d.settings) throw 0;
-    if (confirm('Esto reemplazará los datos actuales. ¿Continuar?')) { db = d; save(); show('dashboard'); } } catch { alert('Archivo no válido'); } };
+  r.onload = async () => { try { const d = JSON.parse(r.result); if (!d.invoices||!d.settings) throw 0;
+    if (await ask('Esto reemplazará todos tus datos actuales por los de la copia. ¿Continuar?', 'Restaurar')) { db = d; save(); show('dashboard'); toast('Copia restaurada'); } }
+    catch { toast('Ese archivo no es una copia de Mis Facturas.'); } e.target.value = ''; };
   r.readAsText(f); };
 
 show('dashboard');
 </script>
-</body>
-</html>
