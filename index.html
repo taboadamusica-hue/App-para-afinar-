@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi IA</title>
+  <meta name="description" content="Una IA privada que entrenas tú y que funciona sin internet.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1 id="title">Mi IA</h1>
+    <span class="privacy" title="Todo se guarda y se procesa en este dispositivo">🔒 Local · sin internet</span>
+    <nav role="tablist">
+      <button role="tab" data-tab="chat" aria-selected="true">Chat</button>
+      <button role="tab" data-tab="train" aria-selected="false">Entrenar</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="chat" class="panel chat">
+      <div id="log" class="log" role="log" aria-live="polite"></div>
+      <form id="send" class="composer">
+        <input id="msg" autocomplete="off" placeholder="Escribe… (/ayuda)" aria-label="Mensaje">
+        <button class="primary" type="submit">Enviar</button>
+      </form>
+    </section>
+
+    <section id="train" class="panel train" hidden>
+      <div class="grid">
+        <form id="teachForm" class="card">
+          <h2>Enseñar una respuesta</h2>
+          <label>Cuando te pregunten… <small>(una forma de preguntarlo por línea)</small>
+            <textarea id="tQuestions" rows="3" placeholder="¿Cómo te llamas?&#10;¿Cuál es tu nombre?" required></textarea>
+          </label>
+          <label>…responde: <small>(para varias respuestas alternativas, sepáralas con una línea ---)</small>
+            <textarea id="tAnswers" rows="3" placeholder="Me llamo {nombre}." required></textarea>
+          </label>
+          <p class="hint">Puedes usar {nombre}, {hora} y {fecha} dentro de las respuestas.</p>
+          <button class="primary">Aprender</button>
+        </form>
+
+        <form id="textForm" class="card">
+          <h2>Aprender de un texto</h2>
+          <label>Tema (opcional) <input id="xTitle" placeholder="Ej.: Mi grupo de música"></label>
+          <label>Pega apuntes, una biografía, preguntas frecuentes…
+            <textarea id="xText" rows="5"></textarea>
+          </label>
+          <label class="file">o carga archivos .txt / .md <input id="xFile" type="file" accept=".txt,.md,text/plain" multiple></label>
+          <button class="primary">Aprender texto</button>
+        </form>
+
+        <form id="persForm" class="card">
+          <h2>Personalidad</h2>
+          <label>Nombre <input id="pName"></label>
+          <label>Saludo inicial <textarea id="pGreeting" rows="3"></textarea></label>
+          <label>Cuando no sabe algo <textarea id="pUnknown" rows="3"></textarea></label>
+          <label>Exigencia al responder <input id="pThreshold" type="range" min="0.1" max="0.7" step="0.05"><small id="pThresholdLabel"></small></label>
+          <button class="primary">Guardar</button>
+        </form>
+
+        <div class="card">
+          <h2>Copia de seguridad</h2>
+          <p class="hint">Todo vive en este navegador. Exporta un archivo para pasar tu IA a otro dispositivo.</p>
+          <div class="row">
+            <button type="button" id="export">Exportar</button>
+            <label class="button">Importar <input id="import" type="file" accept=".json,application/json" hidden></label>
+            <button type="button" id="clearChat">Vaciar chat</button>
+            <button type="button" id="wipe" class="danger">Borrar todo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card knowledge">
+        <div class="kh">
+          <h2>Lo que sabe <span id="count"></span></h2>
+          <input id="filter" type="search" placeholder="Buscar…" aria-label="Buscar en el conocimiento">
+        </div>
+        <ul id="items"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
