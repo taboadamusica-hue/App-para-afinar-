@@ -1,0 +1,14 @@
+{
+  "name": "Afinador IA",
+  "short_name": "Afinador",
+  "description": "Afinador con asistente de IA privado, proactivo y con recordatorios.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101418",
+  "theme_color": "#101418",
+  "lang": "es",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
