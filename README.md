@@ -1,6 +1,6 @@
 # MUSIC MAN 🎤🎸
 
-Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra**, **reconocimiento de acordes** y **analizador de espectro** en una app web que funciona en el móvil (y se instala como app).
+Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra**, **reconocimiento de acordes**, **metrónomo** y **analizador de espectro** en una app web que funciona en el móvil (y se instala como app).
 
 ## Qué hace
 
@@ -19,6 +19,13 @@ Tu músico de bolsillo: **profesor de canto**, **afinador de guitarra**, **recon
 - **En vivo**: toca o canta y muestra el acorde que suena, con su posición de guitarra o piano y el historial.
 - **Canción**: elige un archivo de audio del móvil y obtén sus acordes en el tiempo, la tonalidad y el tempo (BPM). Reproductor con acorde actual y siguiente, línea de acordes desplazable (toca para saltar), cambio de tono, cejilla (muestra las formas a tocar), velocidad lenta sin cambiar el tono, bucle de un tramo y todos los acordes de la canción con su diagrama. Se guardan en una biblioteca.
 - Reconoce mayores, menores, séptimas, maj7, m7, sus2, sus4, disminuidos y aumentados. Todo se analiza en el propio dispositivo.
+
+### Metrónomo
+- 30–300 BPM con deslizador, ±1 (mantener pulsado para ir rápido), tap tempo y ½ · 2×; nombre del tempo (Andante, Allegro…).
+- Compases 2/4, 3/4, 4/4, 5/4, 6/8, 7/8, 9/8 y 12/8; subdivisión en corcheas, tresillos o semicorcheas; 4 sonidos y volumen.
+- Toca cada pulso para hacerlo fuerte, normal o silencio. Los pulsos se iluminan sincronizados con el sonido.
+- Entrenamiento: subir la velocidad sola (p. ej. +5 BPM cada 4 compases hasta 140) y compases en silencio para el pulso interno.
+- Temporización sobre el reloj de audio (sin desfases), sigue sonando al cambiar de pestaña y mantiene la pantalla encendida.
 
 ### Espectro
 - Espectro en tiempo real (FFT de 8192 puntos, eje de frecuencia logarítmico) con retención de picos, tono fundamental y armónicos marcados.
@@ -56,6 +63,7 @@ Publicada con GitHub Pages: https://taboadamusica-hue.github.io/App-para-afinar-
 - `js/audio.js` — micrófono, grabación, tonos de referencia y analizador de espectro.
 - `js/draw.js` — rollo de piano, gráficas, espectro y espectrograma.
 - `js/fft.js`, `js/chords.js` — FFT, cromagrama, reconocimiento de acordes (plantillas + Viterbi), tonalidad y tempo.
+- `js/metronome.js`, `js/metroview.js` — metrónomo (programación precisa con Web Audio) y su pantalla.
 - `js/chordshapes.js`, `js/chordsview.js` — diagramas de guitarra y piano, y la pantalla Acordes.
 - `js/app.js` — interfaz.
 

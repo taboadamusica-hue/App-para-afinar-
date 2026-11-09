@@ -33,6 +33,7 @@
       <symbol id="i-guitar" viewBox="0 0 24 24"><path d="m14 10 6.5-6.5M19 2l3 3"/><path d="M11.5 8.5c-1.4-1.4-4-1.2-5.6.4-1 1-1.2 2.3-.8 3.4-1.6.2-2.8 1.3-2.9 3-.1 2.5 2.1 5 4.5 5.4 1.8.3 3.3-.9 3.6-2.6 1.1.4 2.4.1 3.4-.9 1.6-1.6 1.8-4.2.4-5.6"/><circle cx="9.5" cy="14.5" r="1.3"/></symbol>
       <symbol id="i-chords" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 8h16M9.3 3v18M14.7 3v18"/><circle cx="9.3" cy="12" r="1.4" fill="currentColor"/><circle cx="14.7" cy="16" r="1.4" fill="currentColor"/></symbol>
       <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M12 17v-6M9 14l3-3 3 3"/></symbol>
+      <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9.5 3h5l4.5 18H5L9.5 3Z"/><path d="M7 15h10M12 15l5.5-8.5"/></symbol>
       <symbol id="i-spectrum" viewBox="0 0 24 24"><path d="M3 20h18"/><path d="M5 20v-5M8.5 20V9M12 20v-8M15.5 20V5M19 20v-6"/></symbol>
     </defs>
   </svg>
@@ -156,6 +157,48 @@
       </div>
     </section>
 
+    <!-- METRÓNOMO -->
+    <section id="view-metro" class="view" aria-label="Metrónomo">
+      <div class="metro-stage" id="mStage">
+        <div class="metro-bpm"><b id="mBpm">100</b><span>BPM</span></div>
+        <div id="mTempoName" class="metro-name">Andante</div>
+        <div id="mBeats" class="metro-beats" role="group" aria-label="Pulsos del compás"></div>
+        <p class="metro-hint">Toca un pulso para cambiarlo: fuerte · normal · silencio</p>
+      </div>
+      <div class="metro-tempo">
+        <button id="mMinus" class="round-btn" aria-label="Bajar 1 BPM">−</button>
+        <input id="mSlider" type="range" min="30" max="300" step="1" aria-label="Tempo en BPM" />
+        <button id="mPlus" class="round-btn" aria-label="Subir 1 BPM">+</button>
+      </div>
+      <div class="metro-actions">
+        <button id="mTap" class="btn btn-dark tap-btn">Tap</button>
+        <button id="mStart" class="play-btn play-xl" aria-label="Iniciar metrónomo"><svg><use href="#i-play"/></svg></button>
+        <button id="mHalf" class="btn btn-dark tap-btn" aria-label="Mitad o doble de tempo">½ · 2×</button>
+      </div>
+      <div class="metro-selects">
+        <label class="pill-select"><span>Compás</span><select id="mSig"></select></label>
+        <label class="pill-select"><span>Subdivisión</span><select id="mSub"></select></label>
+        <label class="pill-select"><span>Sonido</span><select id="mSound"></select></label>
+      </div>
+      <label class="set-row col metro-vol"><span>Volumen</span><input id="mVol" type="range" min="0" max="1" step="0.05" /></label>
+
+      <h3 class="section-title">Entrenamiento</h3>
+      <div class="settings">
+        <label class="set-row"><span>Subir la velocidad poco a poco</span><input id="mTrOn" type="checkbox" class="switch" /></label>
+        <div class="set-row trainer-row" id="mTrRow">
+          <label>Subir<select id="mTrStep"></select></label>
+          <label>cada<select id="mTrEvery"></select></label>
+          <label>hasta<span class="with-unit"><input id="mTrTarget" type="number" inputmode="numeric" min="30" max="300" /> BPM</span></label>
+        </div>
+        <label class="set-row"><span>Compases en silencio</span><input id="mMuteOn" type="checkbox" class="switch" /></label>
+        <div class="set-row trainer-row" id="mMuteRow">
+          <label>Suenan<select id="mMutePlay"></select></label>
+          <label>callan<select id="mMuteMute"></select></label>
+        </div>
+      </div>
+      <p class="fineprint">Con «subir la velocidad», el metrónomo empieza en el tempo elegido y lo aumenta solo. Con «compases en silencio» alterna compases que suenan y compases mudos para entrenar tu pulso interno. En compases de corchea (6/8, 7/8…) el BPM indica corcheas.</p>
+    </section>
+
     <!-- ESPECTRO -->
     <section id="view-spectrum" class="view" aria-label="Analizador de espectro">
       <div class="spec-readouts">
@@ -266,6 +309,7 @@
     <button data-go="voice" class="active"><svg><use href="#i-voice"/></svg>Canto</button>
     <button data-go="guitar"><svg><use href="#i-guitar"/></svg>Guitarra</button>
     <button data-go="chords"><svg><use href="#i-chords"/></svg>Acordes</button>
+    <button data-go="metro"><svg><use href="#i-metro"/></svg>Metrónomo</button>
     <button data-go="spectrum"><svg><use href="#i-spectrum"/></svg>Espectro</button>
     <button data-go="progress"><svg><use href="#i-progress"/></svg>Progreso</button>
   </nav>

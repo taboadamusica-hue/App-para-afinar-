@@ -4,6 +4,7 @@ import { analyzeTake, scoreSustain, scoreSequence, EMOTION_LIST } from './analys
 import { MicEngine } from './audio.js';
 import * as db from './db.js';
 import { initChords } from './chordsview.js';
+import { initMetronome } from './metroview.js';
 import { drawRoll, drawChart, circumplexSvg, errColor, drawSpectrum, drawSpectrogramColumn, clearSpectrogram, spectrumPeak } from './draw.js';
 
 // ---------- Ajustes ----------
@@ -58,7 +59,7 @@ $('#micBtn').onclick = () => (engine.running ? stopMic() : startMic());
 
 // ---------- Navegación ----------
 // Pestañas: Canto (afinar · canciones · entrenar), Guitarra, Espectro, Progreso
-const GROUP = { tuner: 'voice', songs: 'voice', song: 'voice', take: 'voice', train: 'voice', guitar: 'guitar', chords: 'chords', spectrum: 'spectrum', progress: 'progress' };
+const GROUP = { tuner: 'voice', songs: 'voice', song: 'voice', take: 'voice', train: 'voice', guitar: 'guitar', chords: 'chords', metro: 'metro', spectrum: 'spectrum', progress: 'progress' };
 const SUB = { tuner: 'tuner', songs: 'songs', song: 'songs', take: 'songs', train: 'train' };
 let lastVoiceView = 'tuner';
 function go(v) {
@@ -71,7 +72,7 @@ function go(v) {
   const sub = $('#subnav');
   sub.hidden = !SUB[v] || !!BACK[v];
   sub.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.go === SUB[v])));
-  const titles = { tuner: 'Canto', songs: 'Canto', song: '', take: 'Tu toma', train: 'Canto', guitar: 'Guitarra', chords: 'Acordes', spectrum: 'Espectro', progress: 'Progreso' };
+  const titles = { tuner: 'Canto', songs: 'Canto', song: '', take: 'Tu toma', train: 'Canto', guitar: 'Guitarra', chords: 'Acordes', metro: 'Metrónomo', spectrum: 'Espectro', progress: 'Progreso' };
   $('#viewTitle').textContent = titles[v];
   $('#backBtn').hidden = !BACK[v];
   if (v !== 'song' && v !== 'take') document.querySelector('.topbar').style.removeProperty('--top-bg');
@@ -411,6 +412,7 @@ function frameLoop() {
     else if (view === 'train' && exercise) drawExerciseRoll();
   }
   if (view === 'chords') chords.onFrame(performance.now());
+  if (view === 'metro') metronome.onFrame();
   requestAnimationFrame(frameLoop);
 }
 
@@ -899,6 +901,11 @@ $('#wipeBtn').onclick = async () => {
 
 // ---------- Acordes ----------
 const chords = initChords({ $, engine, settings, saveSettings, toast, db, esc, startMic, isActive: () => view === 'chords' });
+// El metrónomo sigue sonando aunque cambies de pestaña
+const metronome = initMetronome({ $, engine, settings, saveSettings });
+document.addEventListener('keydown', (e) => {
+  if (view === 'metro' && e.code === 'Space' && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(document.activeElement?.tagName || '')) { e.preventDefault(); metronome.toggle(); }
+});
 
 // ---------- Inicio ----------
 refreshSelects();

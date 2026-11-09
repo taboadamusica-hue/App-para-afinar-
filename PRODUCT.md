@@ -14,7 +14,7 @@ Músicos en general —sobre todo cantantes y guitarristas— que quieren afinar
 
 ## Product Purpose
 
-MUSIC MAN reúne cuatro herramientas: profesor de canto, afinador de guitarra, reconocimiento de acordes y analizador de espectro. El profesor de canto es un "Melodyne de bolsillo": escuchar tu voz por el micrófono, mostrar en tiempo real lo afinado que cantas, registrar tomas por canción y medir la evolución. Además juzga cómo cantas: afinación, estabilidad, vibrato, tono de voz (brillo, aire, dinámica) y emoción transmitida. Éxito = el cantante canta más afinado con el tiempo y entiende qué corregir.
+MUSIC MAN reúne cinco herramientas: profesor de canto, afinador de guitarra, reconocimiento de acordes, metrónomo y analizador de espectro. El profesor de canto es un "Melodyne de bolsillo": escuchar tu voz por el micrófono, mostrar en tiempo real lo afinado que cantas, registrar tomas por canción y medir la evolución. Además juzga cómo cantas: afinación, estabilidad, vibrato, tono de voz (brillo, aire, dinámica) y emoción transmitida. Éxito = el cantante canta más afinado con el tiempo y entiende qué corregir.
 
 ## Positioning
 
@@ -32,6 +32,7 @@ Combina tres cosas que normalmente van separadas: afinador en vivo, registro de 
 - Tesitura (8 tipos de voz, con prueba de rango): zona cómoda y extensión recomendadas; guían ejercicios, rollo de notas e informes. Los rangos son orientativos.
 - Afinador de guitarra: detección automática de cuerda o cuerda fijada con tono de referencia; afinaciones alternativas.
 - Acordes: reconocimiento en vivo por micro y análisis de archivos de audio (acordes en el tiempo, tonalidad, BPM), con tono, cejilla, velocidad, bucle y diagramas de guitarra/piano. Implementación propia; no se copia código de otras apps (p. ej. Chord AI). No se descargan canciones de YouTube ni de servicios de streaming.
+- Metrónomo: 30–300 BPM, tap tempo, compases simples y compuestos, subdivisiones, acentos por pulso, entrenador de velocidad y compases en silencio.
 - Analizador de espectro: espectro logarítmico con retención de picos, fundamental y armónicos, espectrograma.
 - Canciones con tomas (curva de tono + audio), informe con puntuación, piano-roll sincronizado, consejos.
 - Entrenamiento: nota sostenida, nota al azar, escalas, arpegio; cualquier octava vale.
